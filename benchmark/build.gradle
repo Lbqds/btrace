@@ -1,9 +1,10 @@
+// TODO fix the file dependencies
+
 plugins {
   id 'java'
 }
 
 description 'A JMH benchmark to assert the overhead imposed by various types of BTrace instrumentation.'
-
 
 sourceCompatibility = 8
 targetCompatibility = 8
@@ -31,7 +32,7 @@ task btracec(type: JavaExec) {
 
   environment('BTRACE_HOME', "$projectDir")
   classpath configurations.compile
-  main 'com.sun.btrace.compiler.Compiler'
+  main 'org.openjdk.btrace.compiler.Compiler'
   args '-d'
   args "${buildDir}/classes/main"
   args fileTree(dir: "src/main/resources/scripts", include: 'TraceScript.java')
@@ -54,10 +55,6 @@ compileJava.dependsOn btracec
 
 
 dependencies {
-  compile project(':'),
-          files( rootProject.tasks.agentJar.outputs ),
-          files( rootProject.tasks.bootJar.outputs ),
-          files("${buildDir}/classes/main"),
-          libs.jmh,
-          files("${javaHome}/lib/tools.jar")
+  libs.jmh
+  files("${javaHome}/lib/tools.jar")
 }

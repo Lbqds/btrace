@@ -1,0 +1,36 @@
+apply plugin: 'java'
+
+buildscript {
+    dependencies {
+        classpath files('../btrace-compiler/build/classes/main/java')
+    }
+}
+
+task compileTestProbes {
+    dependsOn compileTestJava
+    doLast {
+        def path = project(':btrace-instr').sourceSets.main.runtimeClasspath
+
+        def loader = new URLClassLoader(path.collect { f -> f.toURL() } as URL[])
+        def rsrc = null //loader.findResource("META-INF/services/org.openjdk.btrace.compiler.PackGenerator")
+        def compiler = loader.loadClass('org.openjdk.btrace.compiler.Compiler')
+        def rtCp = sourceSets.main.runtimeClasspath.collect { it.absolutePath }.join(':')
+
+        def args = ["-cp", "${buildDir}/classes/java/test:${rtCp}", "-d", "${buildDir}/classes"]
+
+        def files = fileTree(dir: "src/test/btrace", include: '**/*.java', exclude: 'verifier/**/*.java').findAll {
+            it != null
+        }.collect { it }
+
+        args.addAll(files)
+
+        compiler.main(args as String[])
+    }
+}
+
+test {
+    dependsOn cleanTest
+    inputs.files compileTestProbes.outputs
+    //inputs.files buildDTrace.outputs
+    testLogging.showStandardStreams = true
+}

@@ -37,7 +37,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Fork(1)
 @BenchmarkMode(Mode.AverageTime)
 public class ClassFilterBenchmark {
-    private static final String CLASS_A_PKG = "io.btrace.benchmark";
+    private static final String CLASS_A_PKG = "org.openjdk.btrace.benchmark";
     private static final String CLASS_A_NAME = "ClassA";
     private static final String CLASS_A = CLASS_A_PKG + "." + CLASS_A_NAME;
 

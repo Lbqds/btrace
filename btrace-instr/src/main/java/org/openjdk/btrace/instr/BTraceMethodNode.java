@@ -83,7 +83,7 @@ public class BTraceMethodNode extends MethodNode {
     public AnnotationVisitor visitAnnotation(String type, boolean visible) {
         AnnotationVisitor av = super.visitAnnotation(type, visible);
 
-        if (type.startsWith("Lio/btrace/core/annotations/")) {
+        if (type.startsWith("Lorg/openjdk/btrace/core/annotations/")) {
             isBTraceHandler = true;
         }
         if (type.equals(Constants.ONMETHOD_DESC)) {
@@ -121,7 +121,7 @@ public class BTraceMethodNode extends MethodNode {
                         loc = new Location();
                         return new AnnotationVisitor(Opcodes.ASM5, av1) {
                             @Override
-                            public void visitEnum(String name, String desc, String value) {
+                            public void visitEnum(final String name, final String desc, final String value) {
                                 super.visitEnum(name, desc, value);
 
                                 if (desc.equals(Constants.WHERE_DESC)) {

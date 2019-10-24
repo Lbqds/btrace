@@ -38,7 +38,7 @@ public class BTRACE256Test extends InstrumentorTestBase {
                         "RETURN\n" +
                         "L0\n" +
                         "FRAME SAME\n" +
-                        "GETSTATIC traces/issues/BTRACE256.swingProfiler : Lorg/openjdk/core/Profiler;\n" +
+                        "GETSTATIC traces/issues/BTRACE256.swingProfiler : Lorg/openjdk/btrace/core/Profiler;\n" +
                         "ALOAD 0\n" +
                         "INVOKESTATIC org/openjdk/btrace/core/BTraceUtils$Profiling.recordEntry (Lorg/openjdk/btrace/core/Profiler;Ljava/lang/String;)V\n" +
                         "GETSTATIC traces/issues/BTRACE256.runtime : Lorg/openjdk/btrace/runtime/BTraceRuntimeImpl;\n" +

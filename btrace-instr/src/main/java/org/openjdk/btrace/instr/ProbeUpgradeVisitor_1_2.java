@@ -13,7 +13,7 @@ import static org.objectweb.asm.Opcodes.*;
 final class ProbeUpgradeVisitor_1_2 extends ClassVisitor {
 
     private static final String ANNOTATIONS_PREFIX_OLD = "Lcom/sun/btrace/annotations/";
-    private static final String ANNOTATIONS_PREFIX_NEW = "Lio/btrace/core/annotations/";
+    private static final String ANNOTATIONS_PREFIX_NEW = "Lorg/openjdk/btrace/core/annotations/";
 
     ProbeUpgradeVisitor_1_2(ClassVisitor cv) {
         super(Opcodes.ASM5, cv);
@@ -111,7 +111,7 @@ final class ProbeUpgradeVisitor_1_2 extends ClassVisitor {
             }
 
             @Override
-            public void visitTypeInsn(int opcode, String type) {
+            public void visitTypeInsn(final int opcode, String type) {
                 type = type.replace("com/sun/btrace/shared/", "org/openjdk/btrace/core/handlers/");
                 type = type.replace("com/sun/btrace/services/", "org/openjdk/btrace/services/");
                 super.visitTypeInsn(opcode, type);

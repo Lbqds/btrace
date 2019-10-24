@@ -32,22 +32,22 @@ import java.io.FileOutputStream;
  *
  * @author Jaroslav Bachorik
  */
-final public class DebugSupport {
+public final class DebugSupport {
     private final SharedSettings settings;
 
-    public DebugSupport(SharedSettings s) {
+    public DebugSupport(final SharedSettings s) {
         settings = s != null ? s : new SharedSettings();
     }
 
-    public static void info(String msg) {
+    public static void info(final String msg) {
         System.out.println("btrace INFO: " + msg);
     }
 
-    public static void warning(String msg) {
+    public static void warning(final String msg) {
         System.err.println("btrace WARNING: " + msg);
     }
 
-    public static void warning(Throwable th) {
+    public static void warning(final Throwable th) {
         System.err.println("btrace WARNING: " + th);
         th.printStackTrace(System.out);
     }
@@ -60,12 +60,12 @@ final public class DebugSupport {
         return settings.isDumpClasses();
     }
 
-    public void dumpClass(String className, byte[] code) {
+    public void dumpClass(String className, final byte[] code) {
         if (settings.isDumpClasses()) {
             try {
                 className = className.replace(".", File.separator).replace("/", File.separator);
-                int index = className.lastIndexOf(File.separatorChar);
-                StringBuilder buf = new StringBuilder();
+                final int index = className.lastIndexOf(File.separatorChar);
+                final StringBuilder buf = new StringBuilder();
                 if (!settings.getDumpDir().equals(".")) {
                     buf.append(settings.getDumpDir());
                     buf.append(File.separatorChar);
@@ -83,23 +83,23 @@ final public class DebugSupport {
                 }
                 file += ".class";
                 new File(dir).mkdirs();
-                File out = new File(dir, file);
-                try (FileOutputStream fos = new FileOutputStream(out)) {
+                final File out = new File(dir, file);
+                try (final FileOutputStream fos = new FileOutputStream(out)) {
                     fos.write(code);
                 }
-            } catch (Exception exp) {
+            } catch (final Exception exp) {
                 exp.printStackTrace();
             }
         }
     }
 
-    public void debug(String msg) {
+    public void debug(final String msg) {
         if (settings.isDebug()) {
             System.out.println("btrace DEBUG: " + msg);
         }
     }
 
-    public void debug(Throwable th) {
+    public void debug(final Throwable th) {
         if (settings.isDebug()) {
             System.out.println("btrace DEBUG: " + th);
             th.printStackTrace(System.out);

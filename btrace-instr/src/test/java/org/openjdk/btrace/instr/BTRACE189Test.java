@@ -39,7 +39,7 @@ public class BTRACE189Test extends InstrumentorTestBase {
         transform("issues/BTRACE189");
         checkTrace(
                 "// access flags 0x9\n" +
-                        "public static Lio/btrace/core/BTraceRuntime; runtime\n" +
+                        "public static Lorg/openjdk/btrace/core/BTraceRuntime; runtime\n" +
                         "\n" +
                         "// access flags 0x49\n" +
                         "public static volatile I $btrace$$level = 0\n" +
@@ -49,10 +49,10 @@ public class BTRACE189Test extends InstrumentorTestBase {
                         "TRYCATCHBLOCK L0 L1 L1 java/lang/Throwable\n" +
                         "L0\n" +
                         "LDC Ltraces/issues/BTRACE189;.class\n" +
-                        "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.forClass (Ljava/lang/Class;)Lio/btrace/core/BTraceRuntime;\n" +
-                        "PUTSTATIC traces/issues/BTRACE189.runtime : Lio/btrace/core/BTraceRuntime;\n" +
-                        "GETSTATIC traces/issues/BTRACE189.runtime : Lio/btrace/core/BTraceRuntime;\n" +
-                        "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.enter (Lio/btrace/core/BTraceRuntime;)Z\n" +
+                        "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.forClass (Ljava/lang/Class;)Lorg/openjdk/btrace/core/BTraceRuntime;\n" +
+                        "PUTSTATIC traces/issues/BTRACE189.runtime : Lorg/openjdk/btrace/core/BTraceRuntime;\n" +
+                        "GETSTATIC traces/issues/BTRACE189.runtime : Lorg/openjdk/btrace/core/BTraceRuntime;\n" +
+                        "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.enter (Lorg/openjdk/btrace/core/BTraceRuntime;)Z\n" +
                         "IFNE L2\n" +
                         "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.leave ()V\n" +
                         "RETURN\n" +
@@ -66,8 +66,8 @@ public class BTRACE189Test extends InstrumentorTestBase {
                         "MAXSTACK = 1\n" +
                         "MAXLOCALS = 0\n" +
                         "TRYCATCHBLOCK L0 L1 L1 java/lang/Throwable\n" +
-                        "GETSTATIC traces/issues/BTRACE189.runtime : Lio/btrace/core/BTraceRuntime;\n" +
-                        "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.enter (Lio/btrace/core/BTraceRuntime;)Z\n" +
+                        "GETSTATIC traces/issues/BTRACE189.runtime : Lorg/openjdk/btrace/core/BTraceRuntime;\n" +
+                        "INVOKESTATIC org/openjdk/btrace/core/BTraceRuntime.enter (Lorg/openjdk/btrace/core/BTraceRuntime;)Z\n" +
                         "IFNE L0\n" +
                         "RETURN\n" +
                         "L0\n" +

@@ -138,7 +138,7 @@ public abstract class InstrumentorTestBase {
         traceCode = null;
     }
 
-    protected void load(String traceName, String clzName) throws Exception {
+    protected void load(final String traceName, final String clzName) throws Exception {
         loadTraceCode(traceName);
         loadClass(clzName);
     }
@@ -336,19 +336,19 @@ public abstract class InstrumentorTestBase {
 
     protected byte[] loadTargetClass(String name) throws IOException {
         originalBC = loadResource("/resources/" + name + ".class");
+        if (originalBC == null) {
+            originalBC = loadResource("/resources/" + name + ".clazz");
+        }
         return originalBC;
     }
 
-    private byte[] loadResource(String path) throws IOException {
-        InputStream is = InstrumentorTestBase.class.getResourceAsStream(path);
-        try {
-            return loadFile(is);
-        } finally {
+    private byte[] loadResource(final String path) throws IOException {
+        try (final InputStream is = InstrumentorTestBase.class.getResourceAsStream(path)) {
             if (is == null) {
                 System.err.println("Unable to load resource: " + path);
-            } else {
-                is.close();
+                return null;
             }
+            return loadFile(is);
         }
     }
 

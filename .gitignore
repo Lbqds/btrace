@@ -35,3 +35,4 @@ gradle.properties
 /.nb-gradle/
 /.nb-gradle-properties
 .github_changelog_generator
+**/out/*

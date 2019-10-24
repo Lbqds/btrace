@@ -69,7 +69,7 @@ public class ConcatenatingReader extends FilterReader {
      */
     public ConcatenatingReader(BufferedReader in) {
         super(in);
-        this.inReader = in;
+        inReader = in;
     }
 
     @Override

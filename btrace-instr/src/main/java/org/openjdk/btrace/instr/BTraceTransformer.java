@@ -244,7 +244,7 @@ public final class BTraceTransformer implements ClassFileTransformer {
             return Result.MAYBE;
         }
 
-        static enum Result {
+        enum Result {
             TRUE, FALSE, MAYBE
         }
     }

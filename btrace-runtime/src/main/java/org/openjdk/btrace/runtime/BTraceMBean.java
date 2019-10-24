@@ -88,8 +88,8 @@ public class BTraceMBean implements DynamicMBean {
 
     public BTraceMBean(Class clazz) {
         this.clazz = clazz;
-        this.attributes = getJMXAttributes(clazz);
-        this.beanName = getBeanName(clazz);
+        attributes = getJMXAttributes(clazz);
+        beanName = getBeanName(clazz);
     }
 
     public static void registerMBean(Class clazz) {
@@ -227,7 +227,7 @@ public class BTraceMBean implements DynamicMBean {
         }
         SortedSet<String> names = new TreeSet<>();
         for (String name : attributes.keySet()) {
-            names.add((String) name);
+            names.add(name);
         }
         MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[names.size()];
         Iterator<String> it = names.iterator();
@@ -463,12 +463,12 @@ public class BTraceMBean implements DynamicMBean {
                                     new Object[]{r.blockName,
                                             r.invocations,
                                             r.selfTime,
-                                            (double) (snapshot.timeInterval > 0 ? ((double) r.selfTime / (double) divider) * 100 : 0),
+                                            snapshot.timeInterval > 0 ? ((double) r.selfTime / (double) divider) * 100 : 0,
                                             r.selfTime / r.invocations,
                                             r.selfTimeMax,
                                             r.selfTimeMin == Long.MAX_VALUE ? 0 : r.selfTimeMin,
                                             r.wallTime,
-                                            (double) (snapshot.timeInterval > 0 ? ((double) r.wallTime / (double) divider) * 100 : 0),
+                                            snapshot.timeInterval > 0 ? ((double) r.wallTime / (double) divider) * 100 : 0,
                                             r.wallTime / r.invocations,
                                             r.wallTimeMax,
                                             r.wallTimeMin});

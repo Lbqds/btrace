@@ -74,7 +74,7 @@ public class Postprocessor extends ClassVisitor {
             access &= ~Opcodes.ACC_PROTECTED;
             access |= Opcodes.ACC_PUBLIC;
         }
-        final int localVarOffset = ((access & Opcodes.ACC_STATIC) == 0) ? -1 : 0;
+        int localVarOffset = ((access & Opcodes.ACC_STATIC) == 0) ? -1 : 0;
         access |= Opcodes.ACC_STATIC;
 
         boolean isconstructor = false;
@@ -217,7 +217,7 @@ public class Postprocessor extends ClassVisitor {
             super(Opcodes.ASM5, mv);
             this.localVarOffset = localVarOffset;
             this.isConstructor = isConstructor;
-            this.copyEnabled = !isConstructor; // copy is enabled by default for all methods except constructor
+            copyEnabled = !isConstructor; // copy is enabled by default for all methods except constructor
         }
 
         @Override
@@ -366,7 +366,7 @@ public class Postprocessor extends ClassVisitor {
                     break;
                 }
                 case Opcodes.DUP2_X2: {
-                    Boolean[] vals = new Boolean[]{Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE};
+                    Boolean[] vals = {Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE};
                     Iterator<Boolean> iter = simulatedStack.descendingIterator();
                     int cntr = 0;
                     while (cntr < vals.length && iter.hasNext()) {

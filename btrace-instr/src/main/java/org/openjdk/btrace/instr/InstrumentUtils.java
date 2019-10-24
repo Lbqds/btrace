@@ -104,7 +104,7 @@ public final class InstrumentUtils {
             return true;
         }
 
-        if (TypeUtils.isPrimitive(left)) {
+        if (isPrimitive(left)) {
             return left.equals(right);
         }
 
@@ -199,7 +199,7 @@ public final class InstrumentUtils {
 
     private static int getMajor(byte[] code) {
         // skip 0xCAFEBABE magic and minor version
-        final int majorOffset = 4 + 2;
+        int majorOffset = 4 + 2;
         return (((code[majorOffset] << 8) & 0xFF00) |
                 ((code[majorOffset + 1]) & 0xFF));
     }

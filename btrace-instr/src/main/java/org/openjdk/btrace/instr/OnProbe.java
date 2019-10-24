@@ -82,7 +82,7 @@ public final class OnProbe extends SpecialParameterHolder {
     }
 
     public void setTargetName(String name) {
-        this.targetName = name;
+        targetName = name;
     }
 
     public String getTargetDescriptor() {
@@ -90,7 +90,7 @@ public final class OnProbe extends SpecialParameterHolder {
     }
 
     public void setTargetDescriptor(String desc) {
-        this.targetDescriptor = desc;
+        targetDescriptor = desc;
     }
 
     @XmlElement(name = "map")

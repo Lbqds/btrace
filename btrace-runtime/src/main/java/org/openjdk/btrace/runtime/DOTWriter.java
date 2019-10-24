@@ -218,19 +218,19 @@ import java.util.regex.Pattern;
 public class DOTWriter {
     public static final String DOTWRITER_PREFIX = "dotwriter.";
     // Property settings for fonts.
-    final static String FONTDEFAULTS = "fontname=Helvetica, fontcolor=black, fontsize=10";
+    static final String FONTDEFAULTS = "fontname=Helvetica, fontcolor=black, fontsize=10";
     // Default property settings for entire graph.
-    final static String GRAPHDEFAULTS = FONTDEFAULTS + ", rankdir=LR";
+    static final String GRAPHDEFAULTS = FONTDEFAULTS + ", rankdir=LR";
     // Default property settings for nodes.
-    final static String NODEDEFAULTS = FONTDEFAULTS + ", label=\"\\N\", shape=record, style=filled, fillcolor=lightgrey, color=black";
+    static final String NODEDEFAULTS = FONTDEFAULTS + ", label=\"\\N\", shape=record, style=filled, fillcolor=lightgrey, color=black";
     // Default property settings for edges.
-    final static String EDGEDEFAULTS = FONTDEFAULTS + ", arrowhead=open";
+    static final String EDGEDEFAULTS = FONTDEFAULTS + ", arrowhead=open";
     // Style of starting node.
-    final static String STARTNODESTYLE = "fillcolor=pink";
+    static final String STARTNODESTYLE = "fillcolor=pink";
     // Style of intra dependency edge.
-    final static String INTRAEDGESTYLE = "style=dashed, color=grey";
+    static final String INTRAEDGESTYLE = "style=dashed, color=grey";
     // Style of inter dependency edge.
-    final static String INTEREDGESTYLE = "style=dashed, color=darkGrey";
+    static final String INTEREDGESTYLE = "style=dashed, color=darkGrey";
     private final DotWriterFormatter dotWriterFormatter = new DotWriterFormatter();
     // Cache of field information.
     Map<Class, Field[]> fieldCache = new HashMap<Class, Field[]>();
@@ -241,31 +241,31 @@ public class DOTWriter {
     // Maximum number of array entries displayed.
     private int arrayLimit = 32;
     // Map of visited objects.
-    private Map<Object, Node> visited = new IdentityHashMap<Object, Node>();
+    private final Map<Object, Node> visited = new IdentityHashMap<Object, Node>();
     // Graph properties.
-    private Properties graphProperties = new Properties();
+    private final Properties graphProperties = new Properties();
     // Default node properties.
-    private Properties nodeProperties = new Properties();
+    private final Properties nodeProperties = new Properties();
     // Default edge properties.
-    private Properties edgeProperties = new Properties();
+    private final Properties edgeProperties = new Properties();
     // List of nodes.
-    private List<Node> nodes = new ArrayList<Node>();
+    private final List<Node> nodes = new ArrayList<Node>();
     // List of edges.
-    private List<Edge> edges = new ArrayList<Edge>();
+    private final List<Edge> edges = new ArrayList<Edge>();
     // Output stream.
     private PrintStream dotStream;
     // True if filters are active.
     private boolean filtering = false;
     // Include set of instances.
-    private Set<Object> includeObjects = new HashSet<Object>();
+    private final Set<Object> includeObjects = new HashSet<Object>();
     // Exclude set of instances.
-    private Set<Object> excludeObjects = new HashSet<Object>();
+    private final Set<Object> excludeObjects = new HashSet<Object>();
     // Include List of classes.
-    private List<Class> includeClasses = new ArrayList<Class>();
+    private final List<Class> includeClasses = new ArrayList<Class>();
     // Include classes which matching name pattern
     private Pattern includeClassNames;
     // Exclude List of classes.
-    private List<Class> excludeClasses = new ArrayList<Class>();
+    private final List<Class> excludeClasses = new ArrayList<Class>();
     // Excluse classes with matching name pattern
     private Pattern excludeClassNames;
     // True if collections should be expanded.
@@ -314,9 +314,9 @@ public class DOTWriter {
     // Escape a quoted value string for output.
     private static String escapeString(String value) {
         if (needsEscape(value)) {
-            final StringBuilder result = new StringBuilder();
+            StringBuilder result = new StringBuilder();
             result.append('\"');
-            final StringCharacterIterator iterator = new StringCharacterIterator(value);
+            StringCharacterIterator iterator = new StringCharacterIterator(value);
 
             for (char ch = iterator.current(); ch != CharacterIterator.DONE; ch = iterator.next()) {
                 if (ch == '\"' ||
@@ -329,7 +329,7 @@ public class DOTWriter {
                     result.append(ch);
                 } else if (ch < ' ' || ch > '~') {
                     result.append("\\\\u");
-                    String hex = "0000" + Integer.toHexString((int) ch);
+                    String hex = "0000" + Integer.toHexString(ch);
                     hex = hex.substring(hex.length() - 4);
                     result.append(hex);
                 } else {
@@ -349,7 +349,7 @@ public class DOTWriter {
     private static boolean needsEscape(String value) {
         if (value.length() > 0 && value.charAt(0) == '\"') return false;
 
-        final StringCharacterIterator iterator = new StringCharacterIterator(value);
+        StringCharacterIterator iterator = new StringCharacterIterator(value);
 
         for (char ch = iterator.current(); ch != CharacterIterator.DONE; ch = iterator.next()) {
             if (!Character.isJavaIdentifierPart(ch) && ch != '-') {
@@ -363,11 +363,11 @@ public class DOTWriter {
     public void customize(java.util.Properties props) {
         String prop = props.getProperty(DOTWRITER_PREFIX + "objectlimit");
         if (prop != null) {
-            this.objectLimit(Integer.parseInt(prop));
+            objectLimit(Integer.parseInt(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "fieldLimit");
         if (prop != null) {
-            this.fieldLimit(Integer.parseInt(prop));
+            fieldLimit(Integer.parseInt(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "stringLimit");
         if (prop != null) {
@@ -375,27 +375,27 @@ public class DOTWriter {
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "arrayLimit");
         if (prop != null) {
-            this.arrayLimit(Integer.parseInt(prop));
+            arrayLimit(Integer.parseInt(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "expandCollections");
         if (prop != null) {
-            this.expandCollections(Boolean.parseBoolean(prop));
+            expandCollections(Boolean.parseBoolean(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "diaplayLinks");
         if (prop != null) {
-            this.displayLinks(Boolean.parseBoolean(prop));
+            displayLinks(Boolean.parseBoolean(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "displayStatics");
         if (prop != null) {
-            this.displayStatics(Boolean.parseBoolean(prop));
+            displayStatics(Boolean.parseBoolean(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "excludeClassNames");
         if (prop != null) {
-            this.excludeClassNames(Pattern.compile(prop));
+            excludeClassNames(Pattern.compile(prop));
         }
         prop = props.getProperty(DOTWRITER_PREFIX + "includeClassNames");
         if (prop != null) {
-            this.includeClassNames(Pattern.compile(prop));
+            includeClassNames(Pattern.compile(prop));
         }
     }
 
@@ -890,7 +890,7 @@ public class DOTWriter {
     // This class maintains properties.
     static class Properties {
         // Property map.
-        private Map<String, String> properties = new HashMap<String, String>();
+        private final Map<String, String> properties = new HashMap<String, String>();
 
         // Adds a new property to the map.
         void addProperty(String key, String value) {

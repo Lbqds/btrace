@@ -38,7 +38,7 @@ import static org.objectweb.asm.Opcodes.*;
  *
  * @author Jaroslav Bachorik
  */
-final public class Assembler {
+public final class Assembler {
     private final MethodVisitor mv;
     private final MethodInstrumentorHelper mHelper;
 
@@ -183,22 +183,22 @@ final public class Assembler {
     }
 
     public Assembler storeField(Type owner, String name, Type t) {
-        mv.visitFieldInsn(Opcodes.PUTFIELD, owner.getInternalName(), name, t.getDescriptor());
+        mv.visitFieldInsn(PUTFIELD, owner.getInternalName(), name, t.getDescriptor());
         return this;
     }
 
     public Assembler storeStaticField(Type owner, String name, Type t) {
-        mv.visitFieldInsn(Opcodes.PUTSTATIC, owner.getInternalName(), name, t.getDescriptor());
+        mv.visitFieldInsn(PUTSTATIC, owner.getInternalName(), name, t.getDescriptor());
         return this;
     }
 
     public Assembler loadField(Type owner, String name, Type t) {
-        mv.visitFieldInsn(Opcodes.GETFIELD, owner.getInternalName(), name, t.getDescriptor());
+        mv.visitFieldInsn(GETFIELD, owner.getInternalName(), name, t.getDescriptor());
         return this;
     }
 
     public Assembler loadStaticField(Type owner, String name, Type t) {
-        mv.visitFieldInsn(Opcodes.GETSTATIC, owner.getInternalName(), name, t.getDescriptor());
+        mv.visitFieldInsn(GETSTATIC, owner.getInternalName(), name, t.getDescriptor());
         return this;
     }
 
@@ -547,18 +547,18 @@ final public class Assembler {
         if (itv.getA() <= 0) {
             if (itv.getB() != Integer.MAX_VALUE) {
                 ldc(itv.getB());
-                jump(Opcodes.IF_ICMPGT, jmp);
+                jump(IF_ICMPGT, jmp);
             }
         } else if (itv.getA() < itv.getB()) {
             if (itv.getB() == Integer.MAX_VALUE) {
                 ldc(itv.getA());
-                jump(Opcodes.IF_ICMPLT, jmp);
+                jump(IF_ICMPLT, jmp);
             } else {
                 ldc(itv.getA());
-                jump(Opcodes.IF_ICMPLT, jmp);
+                jump(IF_ICMPLT, jmp);
                 getStatic(clsName, "$btrace$$level", INT_DESC);
                 ldc(itv.getB());
-                jump(Opcodes.IF_ICMPGT, jmp);
+                jump(IF_ICMPGT, jmp);
             }
         }
         return this;
@@ -591,15 +591,15 @@ final public class Assembler {
                 Label l1 = new Label();
                 Label l2 = new Label();
                 ldc(itv.getA());
-                jump(Opcodes.IF_ICMPLT, l1);
+                jump(IF_ICMPLT, l1);
                 getStatic(clsName, BTRACE_LEVEL_FLD, INT_DESC);
                 ldc(itv.getB());
-                jump(Opcodes.IF_ICMPGT, l1);
+                jump(IF_ICMPGT, l1);
                 ldc(0);
                 Label l3 = new Label();
                 label(l3);
                 mHelper.insertFrameSameStack(l3);
-                jump(Opcodes.GOTO, l2);
+                jump(GOTO, l2);
                 label(l1);
                 mHelper.insertFrameSameStack(l1);
                 ldc(-1);

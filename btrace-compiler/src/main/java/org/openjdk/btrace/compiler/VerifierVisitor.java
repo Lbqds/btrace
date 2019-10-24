@@ -118,7 +118,7 @@ public class VerifierVisitor extends TreeScanner<Boolean, Void> {
     public Boolean visitMethodInvocation(MethodInvocationTree node, Void v) {
         Element e = getElement(node);
         if (e.getKind() == ElementKind.METHOD || e.getKind() == ElementKind.CONSTRUCTOR) {
-            String name = ((ExecutableElement) e).getSimpleName().toString();
+            String name = e.getSimpleName().toString();
 
             // allow constructor calls
             if (name.equals("<init>")) {

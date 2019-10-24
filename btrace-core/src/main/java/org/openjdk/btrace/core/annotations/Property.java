@@ -41,8 +41,8 @@ import java.lang.annotation.Target;
 public @interface Property {
     // by default, the name of the attribute is same as the name
     // of the field of the BTrace class.
-    public String name() default "";
+    String name() default "";
 
     // description of this attribute
-    public String description() default "";
+    String description() default "";
 }

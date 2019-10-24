@@ -16,7 +16,7 @@ public interface MethodInstrumentorHelper {
 
     int storeAsNew();
 
-    public interface Accessor {
+    interface Accessor {
         MethodInstrumentorHelper methodHelper();
     }
 }

@@ -43,18 +43,18 @@ final class BTraceClassWriter extends ClassWriter {
     private final Deque<Instrumentor> instrumentors = new ArrayDeque<>();
     private final ClassLoader targetCL;
     private final BTraceClassReader cr;
-    private InstrumentingClassVisitor iClassVisitor = null;
+    private final InstrumentingClassVisitor iClassVisitor = null;
 
     BTraceClassWriter(ClassLoader cl, int flags) {
         super(flags);
-        this.targetCL = cl != null ? cl : ClassLoader.getSystemClassLoader();
-        this.cr = null;
+        targetCL = cl != null ? cl : ClassLoader.getSystemClassLoader();
+        cr = null;
     }
 
     BTraceClassWriter(ClassLoader cl, BTraceClassReader reader, int flags) {
         super(reader, flags);
-        this.targetCL = cl != null ? cl : ClassLoader.getSystemClassLoader();
-        this.cr = reader;
+        targetCL = cl != null ? cl : ClassLoader.getSystemClassLoader();
+        cr = reader;
     }
 
     public void addInstrumentor(BTraceProbe bp) {
@@ -85,7 +85,7 @@ final class BTraceClassWriter extends ClassWriter {
                 hit |= i.hasMatch();
             }
         }
-        return hit ? this.toByteArray() : null;
+        return hit ? toByteArray() : null;
     }
 
     @Override

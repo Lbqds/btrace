@@ -71,18 +71,18 @@ public class BTraceProbePersisted implements BTraceProbe {
     }
 
     private BTraceProbePersisted(BTraceProbeFactory f, BTraceProbeSupport delegate) {
-        this.debug = new DebugSupport(f.getSettings());
+        debug = new DebugSupport(f.getSettings());
         this.delegate = delegate != null ? delegate : new BTraceProbeSupport(debug);
-        this.factory = f;
-        this.preverified = false;
+        factory = f;
+        preverified = false;
     }
 
     private BTraceProbePersisted(BTraceProbeNode bpn) {
         this(bpn.factory, bpn.delegate);
-        this.fullData = bpn.getFullBytecode();
-        this.dataHolder = bpn.getDataHolderBytecode();
+        fullData = bpn.getFullBytecode();
+        dataHolder = bpn.getDataHolderBytecode();
         loadCalleeMap(bpn, calleeMap);
-        this.preverified = true;
+        preverified = true;
     }
 
     public static BTraceProbePersisted from(BTraceProbe bp) {
@@ -487,7 +487,7 @@ public class BTraceProbePersisted implements BTraceProbe {
         }
         Class clz = delegate.defineClass(rt, code);
         t.register(this);
-        this.transformer = t;
+        transformer = t;
         this.rt = rt;
         return clz;
     }
@@ -500,7 +500,7 @@ public class BTraceProbePersisted implements BTraceProbe {
             }
             transformer.unregister(this);
         }
-        this.rt = null;
+        rt = null;
     }
 
     @Override
@@ -529,13 +529,13 @@ public class BTraceProbePersisted implements BTraceProbe {
                 }
             }
         }
-        cr.accept(new ClassVisitor(Opcodes.ASM5) {
+        cr.accept(new ClassVisitor(ASM5) {
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 String mid = CallGraph.methodId(name, desc);
                 if (copiedMethods.contains(mid)) {
                     return copyingVisitor.visitMethod(
-                            Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC,
+                            ACC_PRIVATE | ACC_STATIC,
                             InstrumentUtils.getActionPrefix(getClassName(true)) + name,
                             desc.replace(Constants.ANYTYPE_DESC, Constants.OBJECT_DESC),
                             signature != null ? signature.replace(Constants.ANYTYPE_DESC, Constants.OBJECT_DESC) : null,
@@ -560,7 +560,7 @@ public class BTraceProbePersisted implements BTraceProbe {
 
     private void verifyBytecode() throws VerifierException {
         ClassReader cr = new ClassReader(fullData);
-        cr.accept(new ClassVisitor(Opcodes.ASM5) {
+        cr.accept(new ClassVisitor(ASM5) {
             private String className;
 
             @Override
@@ -604,7 +604,7 @@ public class BTraceProbePersisted implements BTraceProbe {
             }
 
             @Override
-            public MethodVisitor visitMethod(int access, final String methodName, String desc, String sig, String[] exceptions) {
+            public MethodVisitor visitMethod(int access, String methodName, String desc, String sig, String[] exceptions) {
                 if ((access & ACC_SYNCHRONIZED) != 0) {
                     Verifier.reportError("no.synchronized.methods", TypeUtils.descriptorToSimplified(desc, className, methodName));
                 }
@@ -619,7 +619,7 @@ public class BTraceProbePersisted implements BTraceProbe {
                     return super.visitMethod(access, methodName, desc, sig, exceptions);
                 }
 
-                return new MethodVisitor(Opcodes.ASM5, super.visitMethod(access, methodName, desc, sig, exceptions)) {
+                return new MethodVisitor(ASM5, super.visitMethod(access, methodName, desc, sig, exceptions)) {
                     private final Map<Label, Label> labels = new HashMap<>();
 
                     @Override
@@ -769,8 +769,8 @@ public class BTraceProbePersisted implements BTraceProbe {
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 29 * hash + Objects.hashCode(this.name);
-            hash = 29 * hash + Objects.hashCode(this.desc);
+            hash = 29 * hash + Objects.hashCode(name);
+            hash = 29 * hash + Objects.hashCode(desc);
             return hash;
         }
 
@@ -785,14 +785,11 @@ public class BTraceProbePersisted implements BTraceProbe {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final Handler other = (Handler) obj;
-            if (!Objects.equals(this.name, other.name)) {
+            Handler other = (Handler) obj;
+            if (!Objects.equals(name, other.name)) {
                 return false;
             }
-            if (!Objects.equals(this.desc, other.desc)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(desc, other.desc);
         }
 
     }

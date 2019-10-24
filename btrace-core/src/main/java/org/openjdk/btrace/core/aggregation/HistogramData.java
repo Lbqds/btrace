@@ -36,8 +36,8 @@ import java.io.Serializable;
 public class HistogramData implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private long[] values;
-    private long[] counts;
+    private final long[] values;
+    private final long[] counts;
 
     public HistogramData(long[] values, long[] counts) {
         if (values.length != counts.length) {

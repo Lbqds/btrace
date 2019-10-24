@@ -59,9 +59,9 @@ public class BTraceMethodNode extends MethodNode {
     BTraceMethodNode(MethodNode from, BTraceProbeNode cn) {
         super(Opcodes.ASM5, from.access, from.name, from.desc, from.signature, ((List<String>) from.exceptions).toArray(new String[0]));
         this.cn = cn;
-        this.graph = cn.getGraph();
-        this.methodId = CallGraph.methodId(name, desc);
-        this.debug = cn.debug;
+        graph = cn.getGraph();
+        methodId = CallGraph.methodId(name, desc);
+        debug = cn.debug;
     }
 
     @Override
@@ -121,7 +121,7 @@ public class BTraceMethodNode extends MethodNode {
                         loc = new Location();
                         return new AnnotationVisitor(Opcodes.ASM5, av1) {
                             @Override
-                            public void visitEnum(final String name, final String desc, final String value) {
+                            public void visitEnum(String name, String desc, String value) {
                                 super.visitEnum(name, desc, value);
 
                                 if (desc.equals(Constants.WHERE_DESC)) {
@@ -249,7 +249,7 @@ public class BTraceMethodNode extends MethodNode {
     }
 
     @Override
-    public AnnotationVisitor visitParameterAnnotation(int parameter, final String desc, boolean visible) {
+    public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
         AnnotationVisitor av = super.visitParameterAnnotation(parameter, desc, visible);
 
         if (om != null) {
@@ -307,7 +307,7 @@ public class BTraceMethodNode extends MethodNode {
         return op;
     }
 
-    private AnnotationVisitor setSpecialParameters(final SpecialParameterHolder ph, final String desc, int parameter, AnnotationVisitor av) {
+    private AnnotationVisitor setSpecialParameters(final SpecialParameterHolder ph, String desc, int parameter, AnnotationVisitor av) {
         // for OnProbe the 'loc' variable will be null; we will need to verfiy the placement later on
         if (desc.equals(Constants.SELF_DESC)) {
             ph.setSelfParameter(parameter);

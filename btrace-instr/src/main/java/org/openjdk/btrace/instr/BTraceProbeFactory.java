@@ -70,7 +70,7 @@ public final class BTraceProbeFactory {
 
     public BTraceProbeFactory(SharedSettings settings, boolean canLoadPack) {
         this.settings = settings;
-        this.debug = new DebugSupport(settings);
+        debug = new DebugSupport(settings);
         this.canLoadPack = canLoadPack;
     }
 

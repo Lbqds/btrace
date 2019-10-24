@@ -46,13 +46,13 @@ public abstract class Profiler {
      * <br/>
      * The unit is milliseconds.
      */
-    final public long START_TIME;
+    public final long START_TIME;
 
     /**
      * Creates a new {@linkplain Profiler} instance
      */
     public Profiler() {
-        this.START_TIME = System.currentTimeMillis();
+        START_TIME = System.currentTimeMillis();
     }
 
     /**
@@ -79,7 +79,7 @@ public abstract class Profiler {
      *
      * @return Returns the immutable {@linkplain Snapshot} instance
      */
-    final public Snapshot snapshot() {
+    public final Snapshot snapshot() {
         return snapshot(false);
     }
 
@@ -101,7 +101,7 @@ public abstract class Profiler {
      * Helper interface to make accessing a {@linkplain Profiler} as an MBean
      * type safe.
      */
-    public static interface MBeanValueProvider {
+    public interface MBeanValueProvider {
         Snapshot getMBeanValue();
     }
 
@@ -110,8 +110,8 @@ public abstract class Profiler {
      *
      * @since 1.2
      */
-    final public static class Record {
-        final public static Comparator<Record> COMPARATOR = new Comparator<Record>() {
+    public static final class Record {
+        public static final Comparator<Record> COMPARATOR = new Comparator<Record>() {
             @Override
             public int compare(Record o1, Record o2) {
                 if (o1 == null && o2 != null) return 1;
@@ -121,7 +121,7 @@ public abstract class Profiler {
             }
         };
 
-        final public String blockName;
+        public final String blockName;
         public long wallTime = 0, wallTimeMax = 0, wallTimeMin = Long.MAX_VALUE;
         public long selfTime = 0, selfTimeMax = 0, selfTimeMin = Long.MAX_VALUE;
         public long invocations = 1;
@@ -152,26 +152,26 @@ public abstract class Profiler {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final Record other = (Record) obj;
-            if ((this.blockName == null) ? (other.blockName != null) : !this.blockName.equals(other.blockName)) {
+            Record other = (Record) obj;
+            if ((blockName == null) ? (other.blockName != null) : !blockName.equals(other.blockName)) {
                 return false;
             }
-            if (this.wallTime != other.wallTime) {
+            if (wallTime != other.wallTime) {
                 return false;
             }
-            if (this.selfTime != other.selfTime) {
+            if (selfTime != other.selfTime) {
                 return false;
             }
-            return this.invocations == other.invocations;
+            return invocations == other.invocations;
         }
 
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 17 * hash + (this.blockName != null ? this.blockName.hashCode() : 0);
-            hash = 17 * hash + (int) (this.wallTime ^ (this.wallTime >>> 32));
-            hash = 17 * hash + (int) (this.selfTime ^ (this.selfTime >>> 32));
-            hash = 17 * hash + (int) (this.invocations ^ (this.invocations >>> 32));
+            hash = 17 * hash + (blockName != null ? blockName.hashCode() : 0);
+            hash = 17 * hash + (int) (wallTime ^ (wallTime >>> 32));
+            hash = 17 * hash + (int) (selfTime ^ (selfTime >>> 32));
+            hash = 17 * hash + (int) (invocations ^ (invocations >>> 32));
             return hash;
         }
 
@@ -196,28 +196,28 @@ public abstract class Profiler {
      *
      * @since 1.2
      */
-    final public static class Snapshot {
-        final public long timeStamp;
-        final public long timeInterval;
-        final public Record[] total;
+    public static final class Snapshot {
+        public final long timeStamp;
+        public final long timeInterval;
+        public final Record[] total;
 
         public Snapshot(Record[] data, long startTs, long stopTs) {
-            this.timeStamp = stopTs;
-            this.timeInterval = stopTs - startTs;
-            this.total = data;
+            timeStamp = stopTs;
+            timeInterval = stopTs - startTs;
+            total = data;
         }
 
         public List<Object[]> getGridData() {
             List<Object[]> rslt = new ArrayList<Object[]>();
 
-            Object[] titleRow = new Object[]{"Block", "Invocations", "SelfTime.Total", "SelfTime.Avg", "SelfTime.Min",
+            Object[] titleRow = {"Block", "Invocations", "SelfTime.Total", "SelfTime.Avg", "SelfTime.Min",
                     "SelfTime.Max", "WallTime.Total", "WallTime.Avg", "WallTime.Min", "WallTime.Max"};
 
             rslt.add(titleRow);
 
             for (Record r : total) {
                 if (r != null) {
-                    Object[] row = new Object[]{r.blockName, r.invocations, r.selfTime, r.selfTime / r.invocations,
+                    Object[] row = {r.blockName, r.invocations, r.selfTime, r.selfTime / r.invocations,
                             r.selfTimeMin < Long.MAX_VALUE ? r.selfTimeMin : "N/A",
                             r.selfTimeMax > 0 ? r.selfTimeMax : "N/A",
                             r.wallTime, r.wallTime / r.invocations,

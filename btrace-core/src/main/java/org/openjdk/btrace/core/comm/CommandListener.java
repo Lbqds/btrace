@@ -34,5 +34,5 @@ import java.io.IOException;
  * @author A. Sundararajan
  */
 public interface CommandListener {
-    public void onCommand(Command cmd) throws IOException;
+    void onCommand(Command cmd) throws IOException;
 }

@@ -34,19 +34,19 @@ public final class ArgsMap implements Iterable<Map.Entry<String, String>> {
     private final LinkedHashMap<String, String> map;
     private final DebugSupport debug;
     public ArgsMap(Map<String, String> args, DebugSupport debug) {
-        this.map = args != null ? new LinkedHashMap<>(args) : new LinkedHashMap<String, String>();
+        map = args != null ? new LinkedHashMap<>(args) : new LinkedHashMap<String, String>();
         this.debug = debug;
     }
 
     public ArgsMap(String[] argLine, DebugSupport debug) {
-        this.map = new LinkedHashMap<>();
+        map = new LinkedHashMap<>();
         if (argLine != null) {
             for (String arg : argLine) {
                 String[] kv = arg.split("=");
                 if (kv.length != 2) {
-                    this.map.put(arg, "");
+                    map.put(arg, "");
                 } else {
-                    this.map.put(kv[0], kv[1]);
+                    map.put(kv[0], kv[1]);
                 }
             }
         }
@@ -58,7 +58,7 @@ public final class ArgsMap implements Iterable<Map.Entry<String, String>> {
     }
 
     public ArgsMap(int initialCapacity, DebugSupport debug) {
-        this.map = new LinkedHashMap<>(initialCapacity);
+        map = new LinkedHashMap<>(initialCapacity);
         this.debug = debug;
     }
 

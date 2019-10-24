@@ -103,7 +103,7 @@ public class Interval implements Comparable<Interval> {
         List<Interval> result = new ArrayList<>();
         for (Interval i : sorted) {
             if (i.isAll()) {
-                return Collections.singletonList(Interval.none());
+                return Collections.singletonList(none());
             }
             if (i.a <= remainder.a) {
                 if (i.b > remainder.a)
@@ -203,8 +203,8 @@ public class Interval implements Comparable<Interval> {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 23 * hash + this.a;
-        hash = 23 * hash + this.b;
+        hash = 23 * hash + a;
+        hash = 23 * hash + b;
         return hash;
     }
 
@@ -216,11 +216,11 @@ public class Interval implements Comparable<Interval> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Interval other = (Interval) obj;
-        if (this.a != other.a) {
+        Interval other = (Interval) obj;
+        if (a != other.a) {
             return false;
         }
-        return this.b == other.b;
+        return b == other.b;
     }
 
     @Override

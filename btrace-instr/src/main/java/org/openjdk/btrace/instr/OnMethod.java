@@ -112,21 +112,21 @@ public final class OnMethod extends SpecialParameterHolder {
 
     public void setClazz(String clazz) {
         if (clazz.charAt(0) == '+') {
-            this.subtypeMatcher = true;
+            subtypeMatcher = true;
             clazz = clazz.substring(1);
         } else {
-            this.subtypeMatcher = false;
+            subtypeMatcher = false;
             if (clazz.charAt(0) == '@') {
-                this.classAnnotationMatcher = true;
+                classAnnotationMatcher = true;
                 clazz = clazz.substring(1);
             } else {
-                this.classAnnotationMatcher = false;
+                classAnnotationMatcher = false;
             }
             if (clazz.charAt(0) == '/' && Constants.REGEX_SPECIFIER.matcher(clazz).matches()) {
-                this.classRegexMatcher = true;
+                classRegexMatcher = true;
                 clazz = clazz.substring(1, clazz.length() - 1);
             } else {
-                this.classRegexMatcher = false;
+                classRegexMatcher = false;
             }
         }
         this.clazz = clazz;
@@ -139,17 +139,17 @@ public final class OnMethod extends SpecialParameterHolder {
     public void setMethod(String method) {
         char firstChar = method.isEmpty() ? 0 : method.charAt(0);
         if (firstChar == '@') {
-            this.methodAnnotationMatcher = true;
+            methodAnnotationMatcher = true;
             method = method.substring(1);
         } else {
-            this.methodAnnotationMatcher = false;
+            methodAnnotationMatcher = false;
         }
         firstChar = method.isEmpty() ? 0 : method.charAt(0);
         if (firstChar == '/' && Constants.REGEX_SPECIFIER.matcher(method).matches()) {
-            this.methodRegexMatcher = true;
+            methodRegexMatcher = true;
             method = method.substring(1, method.length() - 1);
         } else {
-            this.methodRegexMatcher = false;
+            methodRegexMatcher = false;
         }
         this.method = method;
     }
@@ -183,7 +183,7 @@ public final class OnMethod extends SpecialParameterHolder {
     }
 
     public void setTargetName(String name) {
-        this.targetName = name;
+        targetName = name;
     }
 
     public String getTargetDescriptor() {
@@ -191,15 +191,15 @@ public final class OnMethod extends SpecialParameterHolder {
     }
 
     public void setTargetDescriptor(String desc) {
-        this.targetDescriptor = desc;
+        targetDescriptor = desc;
     }
 
     public Sampled.Sampler getSamplerKind() {
-        return this.samplerKind;
+        return samplerKind;
     }
 
     public void setSamplerKind(Sampled.Sampler kind) {
-        this.samplerKind = kind;
+        samplerKind = kind;
     }
 
     public int getSamplerMean() {
@@ -207,7 +207,7 @@ public final class OnMethod extends SpecialParameterHolder {
     }
 
     public void setSamplerMean(int mean) {
-        this.samplerMean = mean;
+        samplerMean = mean;
     }
 
     public Level getLevel() {
@@ -260,21 +260,21 @@ public final class OnMethod extends SpecialParameterHolder {
         if (!value.isEmpty()) {
             String templated = argsMap.template(value);
             if (!templated.equals(value)) {
-                this.setClazz(templated);
+                setClazz(templated);
             }
         }
         value = getMethod();
         if (!value.isEmpty()) {
             String templated = argsMap.template(value);
             if (!templated.equals(value)) {
-                this.setMethod(templated);
+                setMethod(templated);
             }
         }
         value = getType();
         if (!value.isEmpty()) {
             String templated = argsMap.template(value);
             if (!templated.equals(value)) {
-                this.setType(templated);
+                setType(templated);
             }
         }
         Location loc = getLocation();

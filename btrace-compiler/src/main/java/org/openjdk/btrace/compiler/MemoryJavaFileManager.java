@@ -60,7 +60,7 @@ import java.util.Map;
  */
 public final class MemoryJavaFileManager extends ForwardingJavaFileManager {
 
-    private List<String> includeDirs;
+    private final List<String> includeDirs;
     private Map<String, byte[]> classBytes;
 
     public MemoryJavaFileManager(JavaFileManager fileManager, List<String> includeDirs) {
@@ -175,7 +175,7 @@ public final class MemoryJavaFileManager extends ForwardingJavaFileManager {
      */
     private class ClassOutputBuffer extends SimpleJavaFileObject {
 
-        private String name;
+        private final String name;
 
         ClassOutputBuffer(String name) {
             super(toURI(name), Kind.CLASS);

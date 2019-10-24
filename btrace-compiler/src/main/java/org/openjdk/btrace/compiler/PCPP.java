@@ -66,12 +66,12 @@ public class PCPP {
      * contain either macro definitions or expressions) are currently
      * not handled.
      */
-    private Map/*<String, String>*/ defineMap = new HashMap();
-    private Set/*<String>*/ nonConstantDefines = new HashSet();
+    private final Map/*<String, String>*/ defineMap = new HashMap();
+    private final Set/*<String>*/ nonConstantDefines = new HashSet();
     /**
      * List containing the #include paths as Strings
      */
-    private List/*<String>*/ includePaths;
+    private final List/*<String>*/ includePaths;
     private ParseState state;
 
     public PCPP(List/*<String>*/ includePaths) {
@@ -472,7 +472,7 @@ public class PCPP {
                     // This is probably something the user should investigate.
                     throw new RuntimeException("Cannot redefine symbol \"" + name +
                             " from \"" + defineMap.get(name) + "\" to non-constant " +
-                            " definition \"" + val.toString() + "\"");
+                            " definition \"" + val + "\"");
                 }
                 defineMap.put(name, val.toString());
                 nonConstantDefines.add(name);
@@ -809,8 +809,8 @@ public class PCPP {
     // State
     static class ParseState {
 
-        private StreamTokenizer tok;
-        private String filename;
+        private final StreamTokenizer tok;
+        private final String filename;
         // We do not generate #line directives
         // private int lineNumber;
         private boolean startOfLine;

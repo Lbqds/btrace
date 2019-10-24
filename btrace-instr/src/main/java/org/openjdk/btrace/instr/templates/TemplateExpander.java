@@ -54,14 +54,14 @@ public interface TemplateExpander {
      * <li><b>IGNORED</b> = expander has not claimed the template</li>
      * </ul>
      */
-    public static enum Result {
+    enum Result {
         EXPANDED, CLAIMED, IGNORED
     }
 
     /**
      * A knockoff of the java.util.function.Consumer interface for pre-8 usage
      */
-    public static interface Consumer<T> {
+    interface Consumer<T> {
         void consume(T visitor);
     }
 }

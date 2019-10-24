@@ -61,10 +61,10 @@ public class Instrumentor extends ClassVisitor {
     private final Set<OnMethod> calledOnMethods = new HashSet<>();
 
     private String className, superName;
-    private final ClassVisitor copyingVisitor = new ClassVisitor(Opcodes.ASM5, cv) {
+    private final ClassVisitor copyingVisitor = new ClassVisitor(ASM5, cv) {
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] exceptions) {
-            return new MethodVisitor(Opcodes.ASM5, super.visitMethod(access, name, desc, sig, exceptions)) {
+            return new MethodVisitor(ASM5, super.visitMethod(access, name, desc, sig, exceptions)) {
                 @Override
                 public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
                     if (owner.equals(bcn.getClassName(true))) {
@@ -81,7 +81,7 @@ public class Instrumentor extends ClassVisitor {
         super(ASM5, cv);
         this.cl = cl;
         this.bcn = bcn;
-        this.applicableOnMethods = applicables;
+        applicableOnMethods = applicables;
     }
 
     static final Instrumentor create(BTraceClassReader cr, BTraceProbe bcn, ClassVisitor cv, ClassLoader cl) {
@@ -105,7 +105,7 @@ public class Instrumentor extends ClassVisitor {
         System.err.println("btrace ERROR: invalid regex pattern - " + pattern);
     }
 
-    final public boolean hasMatch() {
+    public final boolean hasMatch() {
         return !calledOnMethods.isEmpty();
     }
 
@@ -186,7 +186,7 @@ public class Instrumentor extends ClassVisitor {
         }
 
         final int mAccess = access;
-        return new MethodVisitor(Opcodes.ASM5, methodVisitor) {
+        return new MethodVisitor(ASM5, methodVisitor) {
             @Override
             public AnnotationVisitor visitAnnotation(String annoDesc, boolean visible) {
                 for (OnMethod om : annotationMatchers) {
@@ -213,33 +213,33 @@ public class Instrumentor extends ClassVisitor {
         StringBuilder mName = new StringBuilder();
         if (fqn) {
             switch (opcode) {
-                case Opcodes.INVOKEDYNAMIC: {
+                case INVOKEDYNAMIC: {
                     mName.append("dynamic");
                     break;
                 }
-                case Opcodes.INVOKEINTERFACE: {
+                case INVOKEINTERFACE: {
                     mName.append("interface");
                     break;
                 }
-                case Opcodes.INVOKESPECIAL: {
+                case INVOKESPECIAL: {
                     mName.append("special");
                     break;
                 }
-                case Opcodes.INVOKESTATIC: {
+                case INVOKESTATIC: {
                     mName.append("static");
                     break;
                 }
-                case Opcodes.INVOKEVIRTUAL: {
+                case INVOKEVIRTUAL: {
                     mName.append("virtual");
                     break;
                 }
-                case Opcodes.PUTSTATIC:
-                case Opcodes.GETSTATIC: {
+                case PUTSTATIC:
+                case GETSTATIC: {
                     mName.append("static field");
                     break;
                 }
-                case Opcodes.PUTFIELD:
-                case Opcodes.GETFIELD: {
+                case PUTFIELD:
+                case GETFIELD: {
                     mName.append("field");
                     break;
                 }
@@ -254,8 +254,8 @@ public class Instrumentor extends ClassVisitor {
 
     private MethodVisitor instrumentorFor(
             final OnMethod om, MethodVisitor mv,
-            final MethodInstrumentorHelper mHelper,
-            final int access, final String name, final String desc) {
+            MethodInstrumentorHelper mHelper,
+            int access, final String name, final String desc) {
         final Location loc = om.getLocation();
         final Where where = loc.getWhere();
         final Type[] actionArgTypes = Type.getArgumentTypes(om.getTargetDescriptor());
@@ -265,9 +265,9 @@ public class Instrumentor extends ClassVisitor {
             case ARRAY_GET:
                 // <editor-fold defaultstate="collapsed" desc="Array Get Instrumentor">
                 return new ArrayAccessInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
-                    final private int INDEX_PTR = 0;
-                    final private int INSTANCE_PTR = 1;
-                    int[] argsIndex = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE};
+                    private final int INDEX_PTR = 0;
+                    private final int INSTANCE_PTR = 1;
+                    final int[] argsIndex = {Integer.MIN_VALUE, Integer.MIN_VALUE};
 
                     @Override
                     protected void onBeforeArrayLoad(int opcode) {
@@ -352,8 +352,8 @@ public class Instrumentor extends ClassVisitor {
             case ARRAY_SET:
                 // <editor-fold defaultstate="collapsed" desc="Array Set Instrumentor">
                 return new ArrayAccessInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
-                    final private int INDEX_PTR = 0, VALUE_PTR = 1, INSTANCE_PTR = 2;
-                    int[] argsIndex = new int[]{-1, -1, -1, -1};
+                    private final int INDEX_PTR = 0, VALUE_PTR = 1, INSTANCE_PTR = 2;
+                    final int[] argsIndex = {-1, -1, -1, -1};
 
                     @Override
                     protected void onBeforeArrayStore(int opcode) {
@@ -450,7 +450,7 @@ public class Instrumentor extends ClassVisitor {
                     private int returnVarIndex = -1;
                     private boolean generatingCode = false;
 
-                    private void injectBtrace(ValidationResult vr, final String method, final Type[] callArgTypes, final Type returnType, final boolean staticCall) {
+                    private void injectBtrace(ValidationResult vr, String method, Type[] callArgTypes, Type returnType, boolean staticCall) {
                         ArgumentProvider[] actionArgs = new ArgumentProvider[actionArgTypes.length + 7];
                         for (int i = 0; i < vr.getArgCnt(); i++) {
                             int index = vr.getArgIdx(i);
@@ -631,7 +631,6 @@ public class Instrumentor extends ClassVisitor {
                                     Label l = levelCheckAfter(om, bcn.getClassName(true));
 
                                     String method = getMethodOrFieldName(om.isTargetMethodOrFieldFqn(), opcode, cOwner, cName, cDesc);
-                                    ;
                                     boolean withReturn = om.getReturnParameter() != -1 && !returnType.equals(Type.VOID_TYPE);
                                     if (withReturn) {
                                         // store the return value to a local variable if not augmented return
@@ -642,7 +641,7 @@ public class Instrumentor extends ClassVisitor {
                                         returnVarIndex = index;
                                     }
                                     // will also retrieve the call args and the return value from the backup variables
-                                    injectBtrace(vr, method, calledMethodArgs, returnType, opcode == Opcodes.INVOKESTATIC);
+                                    injectBtrace(vr, method, calledMethodArgs, returnType, opcode == INVOKESTATIC);
 
                                     if (l != null) {
                                         mv.visitLabel(l);
@@ -651,7 +650,7 @@ public class Instrumentor extends ClassVisitor {
 
                                     MethodTrackingExpander.ELSE_SAMPLE.insert(mv);
 
-                                    if (this.parent == null) {
+                                    if (parent == null) {
                                         MethodTrackingExpander.RESET.insert(mv);
                                     }
                                 }
@@ -699,7 +698,7 @@ public class Instrumentor extends ClassVisitor {
                 return new TypeCheckInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
 
                     private void callAction(int opcode, String desc) {
-                        if (opcode == Opcodes.CHECKCAST) {
+                        if (opcode == CHECKCAST) {
                             Type castType = Type.getObjectType(desc);
                             addExtraTypeInfo(om.getSelfParameter(), Type.getObjectType(className));
                             addExtraTypeInfo(om.getTargetInstanceParameter(), Constants.OBJECT_TYPE);
@@ -818,7 +817,7 @@ public class Instrumentor extends ClassVisitor {
             case ERROR:
                 // <editor-fold defaultstate="collapsed" desc="Error Instrumentor">
                 ErrorReturnInstrumentor eri = new ErrorReturnInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
-                    ValidationResult vr;
+                    final ValidationResult vr;
                     private boolean generatingCode = false;
 
                     {
@@ -1143,7 +1142,7 @@ public class Instrumentor extends ClassVisitor {
 
                     @Override
                     protected void onBeforeTypeCheck(int opcode, String desc) {
-                        if (opcode == Opcodes.INSTANCEOF) {
+                        if (opcode == INSTANCEOF) {
                             castType = Type.getObjectType(desc);
                             vr = validateArguments(om, actionArgTypes, new Type[]{Constants.STRING_TYPE});
                             if (vr.isValid()) {
@@ -1160,7 +1159,7 @@ public class Instrumentor extends ClassVisitor {
 
                     @Override
                     protected void onAfterTypeCheck(int opcode, String desc) {
-                        if (opcode == Opcodes.INSTANCEOF) {
+                        if (opcode == INSTANCEOF) {
                             castType = Type.getObjectType(desc);
                             vr = validateArguments(om, actionArgTypes, new Type[]{Constants.STRING_TYPE});
                             if (vr.isValid()) {
@@ -1358,7 +1357,7 @@ public class Instrumentor extends ClassVisitor {
                 MethodReturnInstrumentor mri = new MethodReturnInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
                     int retValIndex;
 
-                    ValidationResult vr;
+                    final ValidationResult vr;
                     private boolean generatingCode = false;
 
                     {
@@ -1479,7 +1478,7 @@ public class Instrumentor extends ClassVisitor {
                 // <editor-fold defaultstate="collapsed" desc="SyncEntry Instrumentor">
                 return new SynchronizedInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
                     int storedObjIdx = -1;
-                    ValidationResult vr;
+                    final ValidationResult vr;
 
                     {
                         addExtraTypeInfo(om.getSelfParameter(), Type.getObjectType(className));
@@ -1560,7 +1559,7 @@ public class Instrumentor extends ClassVisitor {
                 // <editor-fold defaultstate="collapsed" desc="SyncExit Instrumentor">
                 return new SynchronizedInstrumentor(cl, mv, mHelper, className, superName, access, name, desc) {
                     int storedObjIdx = -1;
-                    ValidationResult vr;
+                    final ValidationResult vr;
 
                     {
                         addExtraTypeInfo(om.getSelfParameter(), Type.getObjectType(className));

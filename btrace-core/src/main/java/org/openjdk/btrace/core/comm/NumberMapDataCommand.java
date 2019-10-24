@@ -84,12 +84,12 @@ public class NumberMapDataCommand extends DataCommand {
     @Override
     protected void read(ObjectInput in)
             throws IOException, ClassNotFoundException {
-        this.name = in.readUTF();
+        name = in.readUTF();
         Map<String, Number> map = new HashMap<String, Number>();
         int sz = in.readInt();
         for (int i = 0; i < sz; i++) {
             map.put(in.readUTF(), (Number) in.readObject());
         }
-        this.data = map;
+        data = map;
     }
 }

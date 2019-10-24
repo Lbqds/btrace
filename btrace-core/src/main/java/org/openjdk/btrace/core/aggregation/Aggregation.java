@@ -51,7 +51,6 @@ public class Aggregation implements Cloneable {
      * @param type the type of aggregation function to use
      */
     public Aggregation(AggregationFunction type) {
-        super();
         this.type = type;
     }
 

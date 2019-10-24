@@ -59,9 +59,9 @@ final class ProbeDescriptorLoader {
 
     ProbeDescriptorLoader(String probeDescPath, DebugSupport ds) {
         // split probe descriptor path into directories
-        this.probeDescDirs = probeDescPath != null ?
+        probeDescDirs = probeDescPath != null ?
                 probeDescPath.split(File.pathSeparator) : null;
-        this.debug = ds;
+        debug = ds;
     }
 
     ProbeDescriptor load(String namespace) {

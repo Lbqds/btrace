@@ -1487,7 +1487,7 @@ public class BTraceUtils {
      * @return the value ln&nbsp;<code>a</code>, the natural logarithm of
      * <code>a</code>.
      */
-    public strictfp static double log(double a) {
+    public static strictfp double log(double a) {
         return Numbers.log(a);
     }
 
@@ -1511,7 +1511,7 @@ public class BTraceUtils {
      * @param a a value
      * @return the base 10 logarithm of  <code>a</code>.
      */
-    public strictfp static double log10(double a) {
+    public static strictfp double log10(double a) {
         return Numbers.log10(a);
     }
 
@@ -1531,7 +1531,7 @@ public class BTraceUtils {
      * @return the value <i>e</i><sup><code>a</code></sup>,
      * where <i>e</i> is the base of the natural logarithms.
      */
-    public strictfp static double exp(double a) {
+    public static strictfp double exp(double a) {
         return Numbers.exp(a);
     }
 
@@ -4197,7 +4197,7 @@ public class BTraceUtils {
          * @return the value ln&nbsp;<code>a</code>, the natural logarithm of
          * <code>a</code>.
          */
-        public strictfp static double log(double a) {
+        public static strictfp double log(double a) {
             return Math.log(a);
         }
 
@@ -4221,7 +4221,7 @@ public class BTraceUtils {
          * @param a a value
          * @return the base 10 logarithm of  <code>a</code>.
          */
-        public strictfp static double log10(double a) {
+        public static strictfp double log10(double a) {
             return Math.log10(a);
         }
 
@@ -4241,7 +4241,7 @@ public class BTraceUtils {
          * @return the value <i>e</i><sup><code>a</code></sup>,
          * where <i>e</i> is the base of the natural logarithms.
          */
-        public strictfp static double exp(double a) {
+        public static strictfp double exp(double a) {
             return Math.exp(a);
         }
 

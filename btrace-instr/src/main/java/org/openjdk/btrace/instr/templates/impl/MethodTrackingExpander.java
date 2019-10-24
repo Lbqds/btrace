@@ -170,7 +170,7 @@ public class MethodTrackingExpander extends BaseTemplateExpander {
         if (sMethodId != null) {
             localMethodId = Integer.parseInt(sMethodId);
         }
-        final int mid = localMethodId;
+        int mid = localMethodId;
 
         if (tryExpandEntry(t, mid, v) ||
                 tryExpandTest(t, mid, v) ||
@@ -182,7 +182,7 @@ public class MethodTrackingExpander extends BaseTemplateExpander {
         return Result.IGNORED;
     }
 
-    private boolean tryExpandEntry(Template t, final int mid, TemplateExpanderVisitor v) {
+    private boolean tryExpandEntry(Template t, int mid, TemplateExpanderVisitor v) {
         if (ENTRY.equals(t)) {
             if (isSampled) {
                 MethodTracker.registerCounter(mid, samplerMean);
@@ -201,7 +201,7 @@ public class MethodTrackingExpander extends BaseTemplateExpander {
         return false;
     }
 
-    private boolean tryExpandTest(Template t, final int mid, TemplateExpanderVisitor v) {
+    private boolean tryExpandTest(Template t, int mid, TemplateExpanderVisitor v) {
         if (TEST_SAMPLE.equals(t)) {
             samplerLabel = new Label();
             boolean collectTime = t.getTagMap().containsKey($TIMED);
@@ -244,7 +244,7 @@ public class MethodTrackingExpander extends BaseTemplateExpander {
         return false;
     }
 
-    private boolean tryExpandExit(Template t, final int mid, TemplateExpanderVisitor v) {
+    private boolean tryExpandExit(Template t, int mid, TemplateExpanderVisitor v) {
         if (EXIT.equals(t)) {
             v.expand(new Exit(mid));
             return true;

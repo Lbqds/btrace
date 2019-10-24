@@ -47,8 +47,8 @@ import static org.objectweb.asm.Opcodes.*;
  */
 final class MethodVerifier extends StackTrackingMethodVisitor {
 
-    final private static Set<String> primitiveWrapperTypes;
-    final private static Set<String> unboxMethods;
+    private static final Set<String> primitiveWrapperTypes;
+    private static final Set<String> unboxMethods;
 
     static {
         primitiveWrapperTypes = new HashSet<>();
@@ -81,10 +81,10 @@ final class MethodVerifier extends StackTrackingMethodVisitor {
     private Object delayedClzLoad = null;
 
     public MethodVerifier(BTraceMethodNode parent, int access, String className, String methodName, String desc) {
-        super(parent, className, desc, ((access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC));
+        super(parent, className, desc, ((access & ACC_STATIC) == ACC_STATIC));
         this.className = className;
         this.methodName = methodName;
-        this.methodDesc = desc;
+        methodDesc = desc;
         this.access = access;
         labels = new HashMap<>();
     }

@@ -31,7 +31,7 @@ import java.util.Random;
 /**
  * @author Jaroslav Bachorik
  */
-final public class SharedRandomIntProvider extends RandomIntProvider {
+public final class SharedRandomIntProvider extends RandomIntProvider {
     private final Random rnd = new Random(System.nanoTime());
 
     @Override

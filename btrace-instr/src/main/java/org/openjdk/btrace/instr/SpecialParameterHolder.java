@@ -42,79 +42,79 @@ abstract class SpecialParameterHolder {
     private boolean methodFqn = false;
     private boolean targetMethodFqn = false;
 
-    final public int getSelfParameter() {
+    public final int getSelfParameter() {
         return selfParameter;
     }
 
-    final public void setSelfParameter(int selfParameter) {
+    public final void setSelfParameter(int selfParameter) {
         this.selfParameter = selfParameter;
     }
 
-    final public int getClassNameParameter() {
+    public final int getClassNameParameter() {
         return classNameParameter;
     }
 
-    final public void setClassNameParameter(int classNameParameter) {
+    public final void setClassNameParameter(int classNameParameter) {
         this.classNameParameter = classNameParameter;
     }
 
-    final public int getMethodParameter() {
+    public final int getMethodParameter() {
         return methodParameter;
     }
 
-    final public void setMethodParameter(int methodParameter) {
+    public final void setMethodParameter(int methodParameter) {
         this.methodParameter = methodParameter;
     }
 
-    final public boolean isMethodFqn() {
+    public final boolean isMethodFqn() {
         return methodFqn;
     }
 
-    final public void setMethodFqn(boolean val) {
+    public final void setMethodFqn(boolean val) {
         methodFqn = val;
     }
 
-    final public boolean isTargetMethodOrFieldFqn() {
+    public final boolean isTargetMethodOrFieldFqn() {
         return targetMethodFqn;
     }
 
-    final public void setTargetMethodOrFieldFqn(boolean val) {
+    public final void setTargetMethodOrFieldFqn(boolean val) {
         targetMethodFqn = val;
     }
 
-    final public int getReturnParameter() {
+    public final int getReturnParameter() {
         return returnParameter;
     }
 
-    final public void setReturnParameter(int returnParameter) {
+    public final void setReturnParameter(int returnParameter) {
         this.returnParameter = returnParameter;
     }
 
-    final public int getTargetMethodOrFieldParameter() {
+    public final int getTargetMethodOrFieldParameter() {
         return targetMethodOrFieldParameter;
     }
 
-    final public void setTargetMethodOrFieldParameter(int calledMethodParameter) {
-        this.targetMethodOrFieldParameter = calledMethodParameter;
+    public final void setTargetMethodOrFieldParameter(int calledMethodParameter) {
+        targetMethodOrFieldParameter = calledMethodParameter;
     }
 
-    final public int getTargetInstanceParameter() {
+    public final int getTargetInstanceParameter() {
         return targetInstanceParameter;
     }
 
-    final public void setTargetInstanceParameter(int calledInstanceParameter) {
-        this.targetInstanceParameter = calledInstanceParameter;
+    public final void setTargetInstanceParameter(int calledInstanceParameter) {
+        targetInstanceParameter = calledInstanceParameter;
     }
 
-    final public int getDurationParameter() {
+    public final int getDurationParameter() {
         return durationParameter;
     }
 
-    final public void setDurationParameter(int durationParameter) {
+    public final void setDurationParameter(int durationParameter) {
         this.durationParameter = durationParameter;
     }
 
-    final public void copyFrom(SpecialParameterHolder other) {
+    public final void copyFrom(SpecialParameterHolder other) {
         classNameParameter = other.classNameParameter;
         durationParameter = other.durationParameter;
         methodParameter = other.methodParameter;

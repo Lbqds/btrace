@@ -37,6 +37,6 @@ package org.openjdk.btrace.core.types;
  * @author A. Sundararajan
  */
 public interface AnyType {
-    public static final AnyType VOID = new AnyType() {
+    AnyType VOID = new AnyType() {
     };
 }

@@ -10,7 +10,7 @@ class Printer {
     // Output //
     ////////////
     private final PrintWriter writer;
-    private ArrayList enabledBits = new ArrayList();
+    private final ArrayList enabledBits = new ArrayList();
 
     Printer() {
         writer = new PrintWriter(System.err);

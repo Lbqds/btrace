@@ -46,10 +46,9 @@ class Quantize implements AggregationValue {
     // buckets[ZERO_INDEX + 1] counts the number of 1s
     // buckets[ZERO_INDEX + 2] counts 2s and 3s,
     // buckets[ZERO_INDEX + 3] counts numbers in the range 4 to 7
-    private AtomicLong[] buckets = new AtomicLong[ZERO_INDEX * 2];
+    private final AtomicLong[] buckets = new AtomicLong[ZERO_INDEX * 2];
 
     public Quantize() {
-        super();
         for (int i = 0; i < buckets.length; i++) {
             buckets[i] = new AtomicLong();
         }

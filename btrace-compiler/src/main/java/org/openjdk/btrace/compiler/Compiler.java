@@ -54,8 +54,8 @@ public class Compiler {
     private final CompilerHelper compilerHelper;
     // null means no preprocessing isf done.
     public List<String> includeDirs;
-    private StandardJavaFileManager stdManager;
-    private String packExtension = "class";
+    private final StandardJavaFileManager stdManager;
+    private final String packExtension = "class";
 
     public Compiler(String includePath, boolean generatePack) {
         if (includePath != null) {
@@ -64,7 +64,7 @@ public class Compiler {
             includeDirs.addAll(Arrays.asList(paths));
         }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        this.stdManager = compiler.getStandardFileManager(null, null, null);
+        stdManager = compiler.getStandardFileManager(null, null, null);
         compilerHelper = new CompilerHelper(compiler, generatePack);
     }
 
@@ -239,7 +239,7 @@ public class Compiler {
 
     private Map<String, byte[]> compile(MemoryJavaFileManager manager,
                                         Iterable<? extends JavaFileObject> compUnits,
-                                        Writer err, String sourcePath, final String classPath) {
+                                        Writer err, String sourcePath, String classPath) {
         // to collect errors, warnings etc.
 
         // javac options

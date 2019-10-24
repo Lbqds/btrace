@@ -37,7 +37,7 @@ import org.openjdk.btrace.services.spi.SimpleService;
  *
  * @author Jaroslav Bachorik
  */
-final public class Service {
+public final class Service {
     /**
      * Creates a BTrace runtime aware service
      *

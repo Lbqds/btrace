@@ -42,8 +42,8 @@ import java.util.regex.Pattern;
  */
 public final class CallGraph {
     private static final Pattern MID_SPLIT_PTN = Pattern.compile("\\:\\:");
-    final private Set<Node> nodes = new HashSet<>();
-    final private Set<Node> startingNodes = new HashSet<>();
+    private final Set<Node> nodes = new HashSet<>();
+    private final Set<Node> startingNodes = new HashSet<>();
 
     public static String methodId(String name, String desc) {
         return name + "::" + desc;
@@ -244,14 +244,14 @@ public final class CallGraph {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final Node other = (Node) obj;
-            return !((this.id == null) ? (other.id != null) : !this.id.equals(other.id));
+            Node other = (Node) obj;
+            return (id == null) ? (other.id == null) : id.equals(other.id);
         }
 
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 11 * hash + (this.id != null ? this.id.hashCode() : 0);
+            hash = 11 * hash + (id != null ? id.hashCode() : 0);
             return hash;
         }
 
@@ -277,8 +277,8 @@ public final class CallGraph {
     }
 
     public static class Edge {
-        private Node from;
-        private Node to;
+        private final Node from;
+        private final Node to;
 
         public Edge(Node from, Node to) {
             this.from = from;
@@ -286,8 +286,8 @@ public final class CallGraph {
         }
 
         public void delete() {
-            this.from.removeOutgoing(this);
-            this.to.removeIncoming(this);
+            from.removeOutgoing(this);
+            to.removeIncoming(this);
         }
 
         @Override
@@ -299,18 +299,18 @@ public final class CallGraph {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final Edge other = (Edge) obj;
-            if (this.from != other.from && (this.from == null || !this.from.equals(other.from))) {
+            Edge other = (Edge) obj;
+            if (from != other.from && (from == null || !from.equals(other.from))) {
                 return false;
             }
-            return !(this.to != other.to && (this.to == null || !this.to.equals(other.to)));
+            return !(to != other.to && (to == null || !to.equals(other.to)));
         }
 
         @Override
         public int hashCode() {
             int hash = 5;
-            hash = 37 * hash + (this.from != null ? this.from.hashCode() : 0);
-            hash = 37 * hash + (this.to != null ? this.to.hashCode() : 0);
+            hash = 37 * hash + (from != null ? from.hashCode() : 0);
+            hash = 37 * hash + (to != null ? to.hashCode() : 0);
             return hash;
         }
     }

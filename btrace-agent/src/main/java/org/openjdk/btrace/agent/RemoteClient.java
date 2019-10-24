@@ -66,7 +66,7 @@ class RemoteClient extends Client {
                         throw new RuntimeException("can not load BTrace class");
                     }
                     hasInstrument = true;
-                    super.initialize();
+                    initialize();
                     break;
                 }
                 case Command.SET_PARAMS: {

@@ -41,9 +41,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  */
 public class MethodInvocationProfiler extends Profiler implements Profiler.MBeanValueProvider {
 
-    final private Collection<WeakReference<MethodInvocationRecorder>> recorders = new ConcurrentLinkedDeque<>();
+    private final Collection<WeakReference<MethodInvocationRecorder>> recorders = new ConcurrentLinkedDeque<>();
     private final int expectedBlockCnt;
-    final private ThreadLocal<MethodInvocationRecorder> recorder = new ThreadLocal<MethodInvocationRecorder>() {
+    private final ThreadLocal<MethodInvocationRecorder> recorder = new ThreadLocal<MethodInvocationRecorder>() {
         @Override
         protected MethodInvocationRecorder initialValue() {
             MethodInvocationRecorder mir = new MethodInvocationRecorder(expectedBlockCnt);
@@ -51,11 +51,11 @@ public class MethodInvocationProfiler extends Profiler implements Profiler.MBean
             return mir;
         }
     };
-    volatile private Snapshot lastValidSnapshot = null;
+    private volatile Snapshot lastValidSnapshot = null;
     private long lastTs = START_TIME;
 
     public MethodInvocationProfiler(int expectedMethodCnt) {
-        this.expectedBlockCnt = expectedMethodCnt;
+        expectedBlockCnt = expectedMethodCnt;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class MethodInvocationProfiler extends Profiler implements Profiler.MBean
             MethodInvocationRecorder mir = mirRef.get();
             if (mir == null) continue;
 
-            final Record[] records = mir.getRecords(reset);
+            Record[] records = mir.getRecords(reset);
             if (records == null || records.length == 0) continue; // just skip the empty data
 
             if (mergedRecords == null) {
@@ -108,7 +108,7 @@ public class MethodInvocationProfiler extends Profiler implements Profiler.MBean
                 if (id == null) {
                     id = mergedEntries++;
                     if (mergedEntries > mergedCapacity) {
-                        mergedCapacity = ((int) ((mergedEntries + 1) * 5) >> 2);
+                        mergedCapacity = (((mergedEntries + 1) * 5) >> 2);
                         Record[] newRecs = new Record[mergedCapacity];
                         System.arraycopy(mergedRecords, 0, newRecs, 0, mergedEntries - 1);
                         mergedRecords = newRecs;

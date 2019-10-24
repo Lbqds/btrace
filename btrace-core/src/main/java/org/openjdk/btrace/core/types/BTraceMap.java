@@ -40,7 +40,7 @@ import java.util.WeakHashMap;
 public final class BTraceMap<K, V> implements Map<K, V>, Cloneable {
     //private int numItems;
     private final Map<K, V> m;
-    private boolean isWeak;
+    private final boolean isWeak;
     private transient Set<K> keySet = null;
     private transient Set<Map.Entry<K, V>> entrySet = null;
     private transient Collection<V> values = null;

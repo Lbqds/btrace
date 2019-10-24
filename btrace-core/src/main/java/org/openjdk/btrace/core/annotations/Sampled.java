@@ -44,7 +44,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
 public @interface Sampled {
-    public static final int MEAN_DEFAULT = 10;
+    int MEAN_DEFAULT = 10;
 
     /**
      * The sampler kind
@@ -72,7 +72,7 @@ public @interface Sampled {
      * <li>{@code Adaptive} - increases or decreases the average number of events between samples to lower overhead</li>
      * </ul>
      */
-    public static enum Sampler {
+    enum Sampler {
         /**
          * No Sampling
          */

@@ -175,7 +175,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
     private static Properties dotWriterProps;
 
     // a dummy BTraceRuntime instance
-    private static BTraceRuntimeImpl dummy = new BTraceRuntimeImpl();
+    private static final BTraceRuntimeImpl dummy = new BTraceRuntimeImpl();
 
     // are we running with DTrace support enabled?
     private static boolean dtraceEnabled;
@@ -215,13 +215,13 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
     }
 
     // for testing purposes
-    private static boolean uniqueClientClassNames = true;
+    private static final boolean uniqueClientClassNames = true;
 
     // BTraceRuntime against BTrace class name
-    private static Map<String, BTraceRuntimeImpl> runtimes = new ConcurrentHashMap<>();
+    private static final Map<String, BTraceRuntimeImpl> runtimes = new ConcurrentHashMap<>();
 
     // a set of all the client names connected so far
-    private static Set<String> clients = new HashSet<>();
+    private static final Set<String> clients = new HashSet<>();
 
     // jvmstat related stuff
     // to read and write perf counters
@@ -229,7 +229,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
     // interface to read perf counters of this process
     private static volatile PerfReader perfReader;
     // performance counters created by this client
-    private static Map<String, ByteBuffer> counters = new HashMap<>();
+    private static final Map<String, ByteBuffer> counters = new HashMap<>();
 
     // Few MBeans used to implement certain built-in functions
     private static volatile HotSpotDiagnosticMXBean hotspotMBean;
@@ -245,7 +245,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
     private final DebugSupport debug;
 
     // current thread's exception
-    private ThreadLocal<Throwable> currentException = new ThreadLocal<>();
+    private final ThreadLocal<Throwable> currentException = new ThreadLocal<>();
 
     // "command line" args supplied by client
     private final ArgsMap args;
@@ -342,7 +342,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
         void commit(int id, MpscChunkedArrayQueue<Command> result) {
             validateId(id);
             currentSpeculationId.set(null);
-            final MpmcArrayQueue<Command> sb = speculativeQueues.get(id);
+            MpmcArrayQueue<Command> sb = speculativeQueues.get(id);
             if (sb != null) {
                 result.addAll(sb);
                 sb.clear();
@@ -414,14 +414,14 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
                          final CommandListener cmdListener,
                          DebugSupport ds, Instrumentation inst) {
         this.args = args;
-        this.queue = new MpscChunkedArrayQueue<>(CMD_QUEUE_LIMIT_DEFAULT);
-        this.specQueueManager = new SpeculativeQueueManager();
+        queue = new MpscChunkedArrayQueue<>(CMD_QUEUE_LIMIT_DEFAULT);
+        specQueueManager = new SpeculativeQueueManager();
         this.className = className;
-        this.instrumentation = inst;
-        this.debug = ds != null ? ds : new DebugSupport(null);
+        instrumentation = inst;
+        debug = ds != null ? ds : new DebugSupport(null);
 
         runtimes.put(className, this);
-        this.cmdThread = new Thread(new Runnable() {
+        cmdThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -546,7 +546,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
             TimerTask[] timerTasks = new TimerTask[timerHandlers.length];
             wrapToTimerTasks(timerTasks);
             for (int index = 0; index < timerHandlers.length; index++) {
-                final TimerHandler th = timerHandlers[index];
+                TimerHandler th = timerHandlers[index];
                 long period = th.period;
                 String periodArg = th.periodArg;
                 if (periodArg != null) {
@@ -730,7 +730,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
      * Write the value of integer perf. counter of given name.
      */
     public static void putPerfInt(int value, String name) {
-        long l = (long)value;
+        long l = value;
         putPerfLong(l, name);
     }
 
@@ -803,11 +803,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
             }
             b.rewind();
         }
-        try {
-            return new String(buf, 0, i, "UTF-8");
-        } catch (java.io.UnsupportedEncodingException e) {
-            // ignore, UTF-8 encoding is always known
-        }
+        return new String(buf, 0, i, StandardCharsets.UTF_8);
         return "";
     }
 
@@ -974,7 +970,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
         }
     }
 
-    private synchronized static void initDOTWriterProps() {
+    private static synchronized void initDOTWriterProps() {
         if (dotWriterProps == null) {
             dotWriterProps = new Properties();
             InputStream is = BTraceRuntime.class.getResourceAsStream("resources/btrace.dotwriter.properties");
@@ -1060,7 +1056,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
             @Override
             @SuppressWarnings("FutureReturnValueIgnored")
             public void handleNotification(Notification notif, Object handback)  {
-                boolean entered = BTraceRuntimeImpl.enter(BTraceRuntimeImpl.this);
+                boolean entered = enter(BTraceRuntimeImpl.this);
                 try {
                     String notifType = notif.getType();
                     if (notifType.equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) {
@@ -1072,12 +1068,12 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
                             threadPool.submit(new Runnable() {
                                 @Override
                                 public void run() {
-                                    boolean entered = BTraceRuntimeImpl.enter(BTraceRuntimeImpl.this);
+                                    boolean entered = enter(BTraceRuntimeImpl.this);
                                     try {
                                         if (handler.trackUsage) {
                                             handler.invoke(clazz, null, info.getUsage());
                                         } else {
-                                            handler.invoke(clazz, null, (Object[])null);
+                                            handler.invoke(clazz, null, null);
                                         }
                                     } catch (Throwable th) {
                                     } finally {
@@ -1244,7 +1240,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
         if (perf == null) {
             synchronized(BTraceRuntime.class) {
                 if (perf == null) {
-                    perf = (Perf) AccessController.doPrivileged(new Perf.GetPerfAction());
+                    perf = AccessController.doPrivileged(new Perf.GetPerfAction());
                 }
             }
         }
@@ -1253,11 +1249,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
 
     private static byte[] getStringBytes(String value) {
         byte[] v = null;
-        try {
-            v = value.getBytes("UTF-8");
-        } catch (java.io.UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        v = value.getBytes(StandardCharsets.UTF_8);
         byte[] v1 = new byte[v.length+1];
         System.arraycopy(v, 0, v1, 0, v.length);
         v1[v.length] = '\0';
@@ -1276,19 +1268,19 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
 
     private void init(Class cl, TimerHandler[] tHandlers, EventHandler[] evHandlers, ErrorHandler[] errHandlers,
                       ExitHandler[] eHandlers, LowMemoryHandler[] lmHandlers) {
-        debugPrint("init: clazz = " + this.clazz + ", cl = " + cl);
-        if (this.clazz != null) {
+        debugPrint("init: clazz = " + clazz + ", cl = " + cl);
+        if (clazz != null) {
             return;
         }
 
-        this.clazz = cl;
+        clazz = cl;
 
         debugPrint("init: timerHandlers = " + Arrays.deepToString(tHandlers));
-        this.timerHandlers = tHandlers;
-        this.eventHandlers = evHandlers;
-        this.errorHandlers = errHandlers;
-        this.exitHandlers = eHandlers;
-        this.lowMemoryHandlers = lmHandlers;
+        timerHandlers = tHandlers;
+        eventHandlers = evHandlers;
+        errorHandlers = errHandlers;
+        exitHandlers = eHandlers;
+        lowMemoryHandlers = lmHandlers;
 
         try {
             level = cl.getDeclaredField("$btrace$$level");
@@ -1335,7 +1327,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
         });
     }
 
-    private static void loadBTraceLibrary(final ClassLoader loader) {
+    private static void loadBTraceLibrary(ClassLoader loader) {
         boolean isSolaris = System.getProperty("os.name").equals("SunOS");
         if (isSolaris) {
             try {

@@ -69,7 +69,7 @@ public class NumberDataCommand extends DataCommand {
     @Override
     protected void read(ObjectInput in)
             throws IOException, ClassNotFoundException {
-        this.name = in.readUTF();
-        this.value = (Number) in.readObject();
+        name = in.readUTF();
+        value = (Number) in.readObject();
     }
 }

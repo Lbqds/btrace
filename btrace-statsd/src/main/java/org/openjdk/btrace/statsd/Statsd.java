@@ -34,6 +34,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -53,8 +54,8 @@ import java.util.concurrent.ThreadFactory;
  *
  * @author Jaroslav Bachorik
  */
-final public class Statsd extends SimpleService {
-    private static final Charset CHARSET = Charset.forName("ascii");
+public final class Statsd extends SimpleService {
+    private static final Charset CHARSET = StandardCharsets.US_ASCII;
     private final QManager qManager = new QManager();
     private final ExecutorService e = Executors.newSingleThreadExecutor(
             new ThreadFactory() {
@@ -455,15 +456,15 @@ final public class Statsd extends SimpleService {
         qManager.event(title, text, timestamp, host, group, sourceType, priority, alertType, tags);
     }
 
-    public static enum Priority {
+    public enum Priority {
         NORMAL, LOW
     }
 
-    public static enum AlertType {
+    public enum AlertType {
         INFO, WARNING, ERROR, SUCCESS
     }
 
-    private final static class Singleton {
-        private final static Statsd INSTANCE = new Statsd();
+    private static final class Singleton {
+        private static final Statsd INSTANCE = new Statsd();
     }
 }

@@ -16,14 +16,14 @@ public final class InstrumentingClassVisitor extends ClassVisitor implements Met
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] ifcs) {
-        this.className = name;
+        className = name;
         super.visit(version, access, name, signature, superName, ifcs);
     }
 
     @Override
     public InstrumentingMethodVisitor visitMethod(int access, String name, String desc, String sig, String[] exceptions) {
         InstrumentingMethodVisitor mv = new InstrumentingMethodVisitor(access, className, name, desc, super.visitMethod(access, name, desc, sig, exceptions));
-        this.helper = mv;
+        helper = mv;
         return mv;
     }
 

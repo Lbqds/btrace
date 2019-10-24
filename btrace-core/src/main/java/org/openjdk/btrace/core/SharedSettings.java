@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * @author Jaroslav Bachorik
  */
-final public class SharedSettings {
+public final class SharedSettings {
     public static final String DEBUG_KEY = "debug";
     public static final String DUMP_DIR_KEY = "dumpDir";
     @Deprecated
@@ -163,7 +163,7 @@ final public class SharedSettings {
     }
 
     public void setTrackRetransforms(boolean value) {
-        this.trackRetransforms = value;
+        trackRetransforms = value;
     }
 
     public String getProbeDescPath() {
@@ -211,7 +211,7 @@ final public class SharedSettings {
     }
 
     public void setRetransformStartup(boolean val) {
-        this.retransformStartup = val;
+        retransformStartup = val;
     }
 
     public String getOutputFile() {
@@ -227,7 +227,7 @@ final public class SharedSettings {
     }
 
     public void setOutputDir(String p) {
-        this.outputDir = p;
+        outputDir = p;
     }
 
     public String getClientName() {

@@ -51,8 +51,8 @@ public class Verifier extends ClassVisitor {
 
     public Verifier(BTraceProbeNode cv, boolean trusted) {
         super(ASM5, cv);
-        this.trustedAllowed = trusted;
-        this.cn = cv;
+        trustedAllowed = trusted;
+        cn = cv;
     }
 
 
@@ -89,7 +89,7 @@ public class Verifier extends ClassVisitor {
     public void visitEnd() {
         if (!cn.isTrusted()) {
             if (cn.getGraph().hasCycle()) {
-                Verifier.this.reportSafetyError("execution.loop.danger");
+                reportSafetyError("execution.loop.danger");
             }
         }
         super.visitEnd();
@@ -101,7 +101,7 @@ public class Verifier extends ClassVisitor {
         if (!cn.isTrusted()) {
             if ((access & ACC_INTERFACE) != 0 ||
                     (access & ACC_ENUM) != 0) {
-                Verifier.this.reportSafetyError("btrace.program.should.be.class");
+                reportSafetyError("btrace.program.should.be.class");
             }
             if ((access & ACC_PUBLIC) == 0) {
                 reportSafetyError("class.should.be.public", name);
@@ -111,7 +111,7 @@ public class Verifier extends ClassVisitor {
                 reportSafetyError("object.superclass.required", superName);
             }
             if (interfaces != null && interfaces.length > 0) {
-                Verifier.this.reportSafetyError("no.interface.implementation");
+                reportSafetyError("no.interface.implementation");
             }
         }
         super.visit(version, access, name, signature,
@@ -128,7 +128,7 @@ public class Verifier extends ClassVisitor {
                 public void visit(String name, Object value) {
                     if (("unsafe".equals(name) || "trusted".equals(name)) && Boolean.TRUE.equals(value)) {
                         if (!trustedAllowed) {
-                            Verifier.this.reportSafetyError("agent.unsafe.not.allowed");
+                            reportSafetyError("agent.unsafe.not.allowed");
                         }
                         cn.setTrusted(); // Found @BTrace(..., trusted=true)
                     }
@@ -140,7 +140,7 @@ public class Verifier extends ClassVisitor {
     }
 
     @Override
-    public FieldVisitor visitField(int access, final String name,
+    public FieldVisitor visitField(int access, String name,
                                    String desc, String signature, Object value) {
         if (!seenBTrace) {
             reportSafetyError("not.a.btrace.program");
@@ -164,8 +164,8 @@ public class Verifier extends ClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(final int access, final String methodName,
-                                     final String methodDesc, String signature, String[] exceptions) {
+    public MethodVisitor visitMethod(int access, String methodName,
+                                     String methodDesc, String signature, String[] exceptions) {
 
         if (!seenBTrace) {
             reportSafetyError("not.a.btrace.program");

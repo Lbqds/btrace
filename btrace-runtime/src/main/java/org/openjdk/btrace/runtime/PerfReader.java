@@ -33,9 +33,9 @@ package org.openjdk.btrace.runtime;
  * @author A. Sundararajan
  */
 public interface PerfReader {
-    public int perfInt(String name);
+    int perfInt(String name);
 
-    public long perfLong(String name);
+    long perfLong(String name);
 
-    public String perfString(String name);
+    String perfString(String name);
 }

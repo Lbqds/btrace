@@ -87,7 +87,7 @@ public class StringMapDataCommand extends DataCommand {
         data = new HashMap<String, String>();
         int sz = in.readInt();
         for (int i = 0; i < sz; i++) {
-            data.put(in.readUTF(), (String) in.readUTF());
+            data.put(in.readUTF(), in.readUTF());
         }
     }
 }

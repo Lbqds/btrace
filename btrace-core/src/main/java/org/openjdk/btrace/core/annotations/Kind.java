@@ -359,4 +359,4 @@ public enum Kind {
      * </ul>
      */
     THROW
-};
+}

@@ -61,7 +61,7 @@ class FileClient extends Client {
     FileClient(ClientContext ctx, File scriptFile) throws IOException {
         super(ctx);
         if (!init(readScript(scriptFile))) {
-            debug.warning("Unable to load BTrace script " + scriptFile);
+            DebugSupport.warning("Unable to load BTrace script " + scriptFile);
         }
     }
 
@@ -83,10 +83,10 @@ class FileClient extends Client {
     }
 
     private boolean init(byte[] code) throws IOException {
-        InstrumentCommand cmd = new InstrumentCommand(code, this.argsMap, debug);
+        InstrumentCommand cmd = new InstrumentCommand(code, argsMap, debug);
         boolean ret = loadClass(cmd, canLoadPack) != null;
         if (ret) {
-            super.initialize();
+            initialize();
         }
         return ret;
     }
@@ -133,7 +133,7 @@ class FileClient extends Client {
     }
 
     private byte[] loadWithSecurity(String path) throws IOException {
-        URL scriptUrl = URLClassLoader.getSystemResource(path);
+        URL scriptUrl = ClassLoader.getSystemResource(path);
         if (scriptUrl.getProtocol().equals("jar")) {
             String jarPath = scriptUrl.getPath().substring(5, scriptUrl.getPath().indexOf("!"));
             JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));

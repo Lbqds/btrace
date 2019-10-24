@@ -41,7 +41,7 @@ import java.util.Map;
  * @author A. Sundararajan
  */
 public class CatchInstrumentor extends MethodInstrumentor {
-    private Map<Label, String> handlers = new HashMap<Label, String>();
+    private final Map<Label, String> handlers = new HashMap<Label, String>();
 
     public CatchInstrumentor(ClassLoader cl, MethodVisitor mv, MethodInstrumentorHelper mHelper,
                              String parentClz, String superClz, int access, String name, String desc) {

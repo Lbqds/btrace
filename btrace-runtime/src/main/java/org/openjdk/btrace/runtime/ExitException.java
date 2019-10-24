@@ -32,7 +32,7 @@ package org.openjdk.btrace.runtime;
  * @author A. Sundararajan
  */
 public final class ExitException extends RuntimeException {
-    private int exitCode;
+    private final int exitCode;
 
     ExitException(int code) {
         exitCode = code;

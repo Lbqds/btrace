@@ -38,7 +38,7 @@ class CompilerHelper {
 
     Map<String, byte[]> compile(MemoryJavaFileManager manager,
                                 Iterable<? extends JavaFileObject> compUnits,
-                                Writer err, String sourcePath, final String classPath) {
+                                Writer err, String sourcePath, String classPath) {
         // to collect errors, warnings etc.
         DiagnosticCollector<JavaFileObject> diagnostics =
                 new DiagnosticCollector<>();
@@ -74,7 +74,7 @@ class CompilerHelper {
         processors.add(btraceVerifier);
         task.setProcessors(processors);
 
-        final PrintWriter perr = (err instanceof PrintWriter) ?
+        PrintWriter perr = (err instanceof PrintWriter) ?
                 (PrintWriter) err :
                 new PrintWriter(err);
 
@@ -147,7 +147,7 @@ class CompilerHelper {
         }
     }
 
-    private void printDiagnostic(Diagnostic diagnostic, final PrintWriter perr) {
+    private void printDiagnostic(Diagnostic diagnostic, PrintWriter perr) {
         perr.println(diagnostic);
     }
 

@@ -37,7 +37,7 @@ public class Level {
     }
 
     private Level(Interval i) {
-        this.value = i;
+        value = i;
     }
 
     private Level(String s) {

@@ -322,7 +322,7 @@ class MethodInvocationRecorder {
             }
         }
         if ((lastMeasurePtr + stackPtr + 1) == measuredSize) {
-            int newMeasuredSize = ((int) (measuredSize * 5) >> 2) + (stackPtr + 1); // make room for the methods on the stack
+            int newMeasuredSize = ((measuredSize * 5) >> 2) + (stackPtr + 1); // make room for the methods on the stack
             if (newMeasuredSize == measuredSize) {
                 newMeasuredSize = (measuredSize << 2) + (stackPtr + 1); // make room for the methods on the stack
             }

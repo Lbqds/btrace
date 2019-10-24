@@ -30,7 +30,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public final class Messages {
-    private static ResourceBundle messages;
+    private static final ResourceBundle messages;
 
     static {
         messages = ResourceBundle.getBundle("org.openjdk.btrace.core.messages", Locale.getDefault());

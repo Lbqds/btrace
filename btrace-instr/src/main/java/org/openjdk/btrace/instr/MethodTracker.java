@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author Jaroslav Bachorik
  */
-final public class MethodTracker {
+public final class MethodTracker {
     private static final RandomIntProvider rndIntProvider = RandomIntProvider.getInstance();
 
     private static AtomicLong[] counters = new AtomicLong[50];
@@ -139,7 +139,7 @@ final public class MethodTracker {
         int mean = means[methodId];
         if (cntr.getAndDecrement() <= 0) {
             long ts = System.nanoTime();
-            ThreadLocal<Long> tsRef = (ThreadLocal<Long>) tsArray[methodId];
+            ThreadLocal<Long> tsRef = tsArray[methodId];
             long ts1 = tsRef.get();
             if (ts1 != 0) {
                 long diff = ts - ts1;
@@ -177,7 +177,7 @@ final public class MethodTracker {
         int origMean = origMeans[methodId];
         if (cntr.getAndDecrement() <= 0) {
             long ts = System.nanoTime();
-            ThreadLocal<Long> tsRef = (ThreadLocal<Long>) tsArray[methodId];
+            ThreadLocal<Long> tsRef = tsArray[methodId];
             long ts1 = tsRef.get();
             if (ts1 != 0) {
                 long diff = ts - ts1;

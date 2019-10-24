@@ -98,13 +98,11 @@ public class Client {
             Class dtraceClass = Class.forName("com.sun.btrace.dtrace.DTrace");
             dtraceEnabled = true;
             submitFile = dtraceClass.getMethod("submit",
-                    new Class[]{File.class, String[].class,
-                            CommandListener.class
-                    });
+                    File.class, String[].class,
+                    CommandListener.class);
             submitString = dtraceClass.getMethod("submit",
-                    new Class[]{String.class, String[].class,
-                            CommandListener.class
-                    });
+                    String.class, String[].class,
+                    CommandListener.class);
         } catch (Exception exp) {
             dtraceEnabled = false;
         }
@@ -541,7 +539,7 @@ public class Client {
     private void commandLoop(CommandListener listener)
             throws IOException {
         assert ois != null : "null input stream?";
-        final AtomicBoolean exited = new AtomicBoolean(false);
+        AtomicBoolean exited = new AtomicBoolean(false);
         while (true) {
             try {
                 Command cmd = WireIO.read(ois);

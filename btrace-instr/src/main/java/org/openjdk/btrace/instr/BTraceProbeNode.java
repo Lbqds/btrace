@@ -75,11 +75,11 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
     private BTraceProbeNode(BTraceProbeFactory factory) {
         super(Opcodes.ASM5);
         this.factory = factory;
-        this.debug = new DebugSupport(factory.getSettings());
-        this.delegate = new BTraceProbeSupport(debug);
-        this.idmap = new HashMap<>();
-        this.graph = new CallGraph();
-        this.prep = new Preprocessor(debug);
+        debug = new DebugSupport(factory.getSettings());
+        delegate = new BTraceProbeSupport(debug);
+        idmap = new HashMap<>();
+        graph = new CallGraph();
+        prep = new Preprocessor(debug);
     }
 
     BTraceProbeNode(BTraceProbeFactory factory, byte[] code) {
@@ -167,7 +167,7 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
         }
         Class clz = delegate.defineClass(rt, code);
         t.register(this);
-        this.transformer = t;
+        transformer = t;
         this.rt = rt;
         return clz;
     }
@@ -180,7 +180,7 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
             }
             transformer.unregister(this);
         }
-        this.rt = null;
+        rt = null;
     }
 
     @Override
@@ -220,7 +220,7 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
                 }
             };
         }
-        this.accept(cv);
+        accept(cv);
         return cw.toByteArray();
     }
 
@@ -448,7 +448,7 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
     }
 
     private byte[] readFully(InputStream is) throws IOException {
-        final int bufSize = 512;
+        int bufSize = 512;
         int pos = 0;
         byte[] finArr = new byte[1024];
         byte[] buff = new byte[bufSize];

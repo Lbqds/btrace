@@ -80,7 +80,7 @@ public final class Main {
         }
     };
     private static final ExecutorService serializedExecutor = Executors.newSingleThreadExecutor(qProcessorThreadFactory);
-    private static long ts = System.nanoTime();
+    private static final long ts = System.nanoTime();
     private static volatile ArgsMap argMap;
     private static volatile Instrumentation inst;
     private static volatile Long fileRollMilliseconds;
@@ -93,7 +93,7 @@ public final class Main {
         main(args, inst);
     }
 
-    private static synchronized void main(final String args, final Instrumentation inst) {
+    private static synchronized void main(String args, Instrumentation inst) {
         if (Main.inst != null) {
             return;
         } else {
@@ -147,7 +147,7 @@ public final class Main {
             }
         } finally {
             inst.addTransformer(transformer, true);
-            Main.debugPrint("Agent init took: " + (System.nanoTime() - ts) + "ns");
+            debugPrint("Agent init took: " + (System.nanoTime() - ts) + "ns");
         }
     }
 
@@ -472,7 +472,7 @@ public final class Main {
                     String path = tokenizer.nextToken();
                     File f = new File(path);
                     if (!f.exists()) {
-                        debug.warning("BTrace bootstrap classpath resource [ " + path + "] does not exist");
+                        DebugSupport.warning("BTrace bootstrap classpath resource [ " + path + "] does not exist");
                     } else {
                         if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
                             JarFile jf = new JarFile(f);
@@ -501,7 +501,7 @@ public final class Main {
                     String path = tokenizer.nextToken();
                     File f = new File(path);
                     if (!f.exists()) {
-                        debug.warning("BTrace system classpath resource [" + path + "] does not exist.");
+                        DebugSupport.warning("BTrace system classpath resource [" + path + "] does not exist.");
                     } else {
                         if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
                             JarFile jf = new JarFile(f);
@@ -537,7 +537,7 @@ public final class Main {
                     appendToSysClassPath(libFolder);
                 } else {
                     DebugSupport.warning("Invalid 'libs' configuration [" + libs + "]. " +
-                            "Path '" + libFolder.toAbsolutePath().toString() + "' does not exist.");
+                            "Path '" + libFolder.toAbsolutePath() + "' does not exist.");
                 }
             }
         }
@@ -557,7 +557,7 @@ public final class Main {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         if (file.toString().toLowerCase().endsWith(".jar")) {
                             if (isDebug()) {
-                                debugPrint("Adding " + file.toString() + " to bootstrap classpath");
+                                debugPrint("Adding " + file + " to bootstrap classpath");
                             }
                             inst.appendToBootstrapClassLoaderSearch(new JarFile(file.toFile()));
                         }
@@ -594,7 +594,7 @@ public final class Main {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         if (file.toString().toLowerCase().endsWith(".jar")) {
                             if (isDebug()) {
-                                debugPrint("Adding " + file.toString() + " to system classpath");
+                                debugPrint("Adding " + file + " to system classpath");
                             }
                             inst.appendToSystemClassLoaderSearch(new JarFile(file.toFile()));
                         }

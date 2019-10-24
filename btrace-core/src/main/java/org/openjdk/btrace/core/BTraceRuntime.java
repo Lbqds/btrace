@@ -62,6 +62,7 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
@@ -101,7 +102,7 @@ public final class BTraceRuntime {
     // are we running with DTrace support enabled?
     private static boolean dtraceEnabled;
     private static boolean isNewerThan8 = false;
-    private static volatile BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
+    private static final BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
         @Override
         public BTraceRuntimeImpl getRt() {
             return null;
@@ -111,7 +112,7 @@ public final class BTraceRuntime {
     // to read and write perf counters
     private static volatile Perf perf;
     // performance counters created by this client
-    private static Map<String, ByteBuffer> counters = new HashMap<>();
+    private static final Map<String, ByteBuffer> counters = new HashMap<>();
     // Few MBeans used to implement certain built-in functions
     private static volatile HotSpotDiagnosticMXBean hotspotMBean;
     private static volatile MemoryMXBean memoryMBean;
@@ -120,7 +121,7 @@ public final class BTraceRuntime {
     private static volatile List<GarbageCollectorMXBean> gcBeanList;
     private static volatile List<MemoryPoolMXBean> memPoolList;
     private static volatile OperatingSystemMXBean operatingSystemMXBean;
-    private static String INDENT = "    ";
+    private static final String INDENT = "    ";
 
     static {
         try {
@@ -257,7 +258,7 @@ public final class BTraceRuntime {
      * Write the value of integer perf. counter of given name.
      */
     public static void putPerfInt(int value, String name) {
-        long l = (long) value;
+        long l = value;
         putPerfLong(l, name);
     }
 
@@ -330,11 +331,7 @@ public final class BTraceRuntime {
             }
             b.rewind();
         }
-        try {
-            return new String(buf, 0, i, "UTF-8");
-        } catch (java.io.UnsupportedEncodingException e) {
-            // ignore, UTF-8 encoding is always known
-        }
+        return new String(buf, 0, i, StandardCharsets.UTF_8);
         return "";
     }
 
@@ -948,7 +945,7 @@ public final class BTraceRuntime {
                 Thread.getAllStackTraces().entrySet();
         StringBuilder buf = new StringBuilder();
         for (Map.Entry<Thread, StackTraceElement[]> t : traces) {
-            buf.append(t.getKey().toString());
+            buf.append(t.getKey());
             buf.append(LINE_SEPARATOR);
             buf.append(LINE_SEPARATOR);
             StackTraceElement[] st = t.getValue();
@@ -991,7 +988,7 @@ public final class BTraceRuntime {
         StringBuilder buf = new StringBuilder();
         for (int i = strip; i < limit; i++) {
             buf.append(prefix);
-            buf.append(st[i].toString());
+            buf.append(st[i]);
             buf.append(LINE_SEPARATOR);
         }
         if (printWarning && limit < st.length) {
@@ -1255,7 +1252,7 @@ public final class BTraceRuntime {
                         MonitorInfo[] monitors = ti.getLockedMonitors();
                         for (int i = 0; i < stacktrace.length; i++) {
                             StackTraceElement ste = stacktrace[i];
-                            sb.append(INDENT).append("at ").append(ste.toString());
+                            sb.append(INDENT).append("at ").append(ste);
                             sb.append(LINE_SEPARATOR);
                             for (MonitorInfo mi : monitors) {
                                 if (mi.getLockedStackDepth() == i) {
@@ -1596,7 +1593,7 @@ public final class BTraceRuntime {
         if (perf == null) {
             synchronized (BTraceRuntime.class) {
                 if (perf == null) {
-                    perf = (Perf) AccessController.doPrivileged(new Perf.GetPerfAction());
+                    perf = AccessController.doPrivileged(new Perf.GetPerfAction());
                 }
             }
         }
@@ -1605,11 +1602,7 @@ public final class BTraceRuntime {
 
     private static byte[] getStringBytes(String value) {
         byte[] v = null;
-        try {
-            v = value.getBytes("UTF-8");
-        } catch (java.io.UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        v = value.getBytes(StandardCharsets.UTF_8);
         byte[] v1 = new byte[v.length + 1];
         System.arraycopy(v, 0, v1, 0, v.length);
         v1[v.length] = '\0';
@@ -1674,13 +1667,13 @@ public final class BTraceRuntime {
         BTraceRuntimeImpl getRt();
     }
 
-    private final static class BTraceAtomicInteger extends AtomicInteger {
+    private static final class BTraceAtomicInteger extends AtomicInteger {
         BTraceAtomicInteger(int initVal) {
             super(initVal);
         }
     }
 
-    private final static class BTraceAtomicLong extends AtomicLong {
+    private static final class BTraceAtomicLong extends AtomicLong {
         BTraceAtomicLong(long initVal) {
             super(initVal);
         }

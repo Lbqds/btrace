@@ -34,19 +34,19 @@ import java.util.Set;
  *
  * @author Jaroslav Bachorik
  */
-abstract public class BaseTemplateExpander implements TemplateExpander {
+public abstract class BaseTemplateExpander implements TemplateExpander {
     private final Set<Template> supportedTemplates = new HashSet<>();
 
     private Template lastTemplate = null;
 
     public BaseTemplateExpander(Template... templates) {
-        this.supportedTemplates.addAll(Arrays.asList(templates));
+        supportedTemplates.addAll(Arrays.asList(templates));
         BTraceTemplates.registerTemplates(templates);
     }
 
 
     @Override
-    final public Result expand(TemplateExpanderVisitor v, Template t) {
+    public final Result expand(TemplateExpanderVisitor v, Template t) {
         if (lastTemplate == null) {
             if (t == null || !supportedTemplates.contains(t)) {
                 return Result.IGNORED;
@@ -67,7 +67,7 @@ abstract public class BaseTemplateExpander implements TemplateExpander {
         }
     }
 
-    abstract protected void recordTemplate(Template t);
+    protected abstract void recordTemplate(Template t);
 
-    abstract protected Result expandTemplate(TemplateExpanderVisitor v, Template t);
+    protected abstract Result expandTemplate(TemplateExpanderVisitor v, Template t);
 }

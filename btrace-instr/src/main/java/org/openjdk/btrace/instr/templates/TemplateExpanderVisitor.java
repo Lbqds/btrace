@@ -48,20 +48,20 @@ import java.util.Collection;
  * @since 1.3
  */
 public class TemplateExpanderVisitor extends BTraceMethodVisitor {
-    final private Collection<TemplateExpander> expanders = new ArrayList<>();
-    final private String className, methodName, desc;
-    final private Assembler asm;
+    private final Collection<TemplateExpander> expanders = new ArrayList<>();
+    private final String className, methodName, desc;
+    private final Assembler asm;
     private TemplateExpander.Result lastResult = TemplateExpander.Result.IGNORED;
     private boolean expanding = false;
 
     public TemplateExpanderVisitor(MethodVisitor mv, MethodInstrumentorHelper mHelper, String className, String methodName, String desc) {
         super(mv, mHelper);
 
-        this.expanders.add(new MethodTrackingExpander(MethodID.getMethodId(className, methodName, desc), mHelper));
+        expanders.add(new MethodTrackingExpander(MethodID.getMethodId(className, methodName, desc), mHelper));
         this.className = className;
         this.methodName = methodName;
         this.desc = desc;
-        this.asm = new Assembler(mv, mHelper);
+        asm = new Assembler(mv, mHelper);
     }
 
     public Assembler asm() {

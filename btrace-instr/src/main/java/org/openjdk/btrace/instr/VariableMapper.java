@@ -14,7 +14,7 @@ public class VariableMapper {
 
     public VariableMapper(int argsSize) {
         this.argsSize = argsSize;
-        this.nextMappedVar = argsSize;
+        nextMappedVar = argsSize;
     }
 
     private VariableMapper(int argsSize, int nextMappedVar, int[] mapping) {
@@ -28,9 +28,9 @@ public class VariableMapper {
     }
 
     public void replaceWith(VariableMapper other) {
-        this.argsSize = other.argsSize;
-        this.nextMappedVar = other.nextMappedVar;
-        this.mapping = Arrays.copyOf(other.mapping, other.mapping.length);
+        argsSize = other.argsSize;
+        nextMappedVar = other.nextMappedVar;
+        mapping = Arrays.copyOf(other.mapping, other.mapping.length);
     }
 
     public VariableMapper mirror() {

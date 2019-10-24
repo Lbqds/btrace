@@ -848,29 +848,29 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         return items;
     }
 
-    abstract public static class StackItem {
-        private Set<StackItem> parents = new HashSet<>();
+    public abstract static class StackItem {
+        private final Set<StackItem> parents = new HashSet<>();
 
         public StackItem(StackItem... parents) {
             this.parents.addAll(Arrays.asList(parents));
         }
 
-        final public Set<StackItem> getParents() {
+        public final Set<StackItem> getParents() {
             return parents;
         }
 
-        final public void merge(StackItem sl) {
+        public final void merge(StackItem sl) {
             parents.addAll(sl.getParents());
         }
 
-        abstract public Kind getKind();
+        public abstract Kind getKind();
 
         public enum Kind {
             VARIABLE, CONSTANT, INSTANCE, RESULT
         }
     }
 
-    final public static class VariableItem extends StackItem {
+    public static final class VariableItem extends StackItem {
         private final int var;
 
         public VariableItem(int var, StackItem... parents) {
@@ -890,7 +890,7 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         @Override
         public int hashCode() {
             int hash = 5;
-            hash = 31 * hash + this.var;
+            hash = 31 * hash + var;
             return hash;
         }
 
@@ -902,8 +902,8 @@ class StackTrackingMethodVisitor extends MethodVisitor {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final VariableItem other = (VariableItem) obj;
-            return this.var == other.var;
+            VariableItem other = (VariableItem) obj;
+            return var == other.var;
         }
     }
 
@@ -927,7 +927,7 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 59 * hash + (this.val != null ? this.val.hashCode() : 0);
+            hash = 59 * hash + (val != null ? val.hashCode() : 0);
             return hash;
         }
 
@@ -939,8 +939,8 @@ class StackTrackingMethodVisitor extends MethodVisitor {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final ConstantItem other = (ConstantItem) obj;
-            return !(this.val != other.val && (this.val == null || !this.val.equals(other.val)));
+            ConstantItem other = (ConstantItem) obj;
+            return !(val != other.val && (val == null || !val.equals(other.val)));
         }
     }
 
@@ -964,7 +964,7 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 41 * hash + (this.t != null ? this.t.hashCode() : 0);
+            hash = 41 * hash + (t != null ? t.hashCode() : 0);
             return hash;
         }
 
@@ -977,8 +977,8 @@ class StackTrackingMethodVisitor extends MethodVisitor {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final InstanceItem other = (InstanceItem) obj;
-            return !(this.t != other.t && (this.t == null || !this.t.equals(other.t)));
+            InstanceItem other = (InstanceItem) obj;
+            return !(t != other.t && (t == null || !t.equals(other.t)));
         }
     }
 
@@ -1021,9 +1021,9 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 89 * hash + (this.owner != null ? this.owner.hashCode() : 0);
-            hash = 89 * hash + (this.name != null ? this.name.hashCode() : 0);
-            hash = 89 * hash + (this.desc != null ? this.desc.hashCode() : 0);
+            hash = 89 * hash + (owner != null ? owner.hashCode() : 0);
+            hash = 89 * hash + (name != null ? name.hashCode() : 0);
+            hash = 89 * hash + (desc != null ? desc.hashCode() : 0);
             return hash;
         }
 
@@ -1035,14 +1035,14 @@ class StackTrackingMethodVisitor extends MethodVisitor {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final ResultItem other = (ResultItem) obj;
-            if ((this.owner == null) ? (other.owner != null) : !this.owner.equals(other.owner)) {
+            ResultItem other = (ResultItem) obj;
+            if ((owner == null) ? (other.owner != null) : !owner.equals(other.owner)) {
                 return false;
             }
-            if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
+            if ((name == null) ? (other.name != null) : !name.equals(other.name)) {
                 return false;
             }
-            return !((this.desc == null) ? (other.desc != null) : !this.desc.equals(other.desc));
+            return (desc == null) ? (other.desc == null) : desc.equals(other.desc);
         }
 
         public enum Origin {
@@ -1051,9 +1051,9 @@ class StackTrackingMethodVisitor extends MethodVisitor {
     }
 
     private static final class FrameState {
-        final private Map<Integer, StackItem> vars;
-        final private Map<Integer, StackItem> args;
-        private Deque<StackItem> stack;
+        private final Map<Integer, StackItem> vars;
+        private final Map<Integer, StackItem> args;
+        private final Deque<StackItem> stack;
         private int maxStack;
         private int maxVars;
 
@@ -1062,8 +1062,8 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         }
 
         private FrameState(Deque<StackItem> s, Map<Integer, StackItem> v, Map<Integer, StackItem> args) {
-            this.stack = new LinkedList<>(s);
-            this.vars = v != null ? new HashMap<>(v) : new HashMap<Integer, StackItem>();
+            stack = new LinkedList<>(s);
+            vars = v != null ? new HashMap<>(v) : new HashMap<Integer, StackItem>();
             this.args = new HashMap<>(args);
         }
 
@@ -1151,7 +1151,7 @@ class StackTrackingMethodVisitor extends MethodVisitor {
                 }
             }
 
-            this.fState = new FrameState(argMap);
+            fState = new FrameState(argMap);
         }
 
         public void branch(Label l) {

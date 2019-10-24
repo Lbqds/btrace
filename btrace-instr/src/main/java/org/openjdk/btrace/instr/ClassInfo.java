@@ -63,7 +63,7 @@ public final class ClassInfo {
                 supertypes.add(cache.get(itfc));
             }
         }
-        this.isInterface = clz.isInterface();
+        isInterface = clz.isInterface();
     }
     ClassInfo(ClassCache cache, ClassLoader cl, ClassName cName) {
         this.cache = cache;
@@ -170,7 +170,7 @@ public final class ClassInfo {
         return isInterface;
     }
 
-    private void loadExternalClass(final ClassLoader cl, final ClassName className) {
+    private void loadExternalClass(ClassLoader cl, ClassName className) {
         String resourcePath = className.getResourcePath();
 
         try {
@@ -179,7 +179,7 @@ public final class ClassInfo {
                 try {
                     BTraceClassReader cr = new BTraceClassReader(cl, typeIs);
 
-                    this.isInterface = cr.isInterface();
+                    isInterface = cr.isInterface();
                     String[] info = cr.readClassSupers();
                     String superName = info[0];
                     if (superName != null) {
@@ -209,8 +209,8 @@ public final class ClassInfo {
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 37 * hash + Objects.hashCode(this.cLoaderId);
-        hash = 37 * hash + Objects.hashCode(this.classId);
+        hash = 37 * hash + Objects.hashCode(cLoaderId);
+        hash = 37 * hash + Objects.hashCode(classId);
         return hash;
     }
 
@@ -225,11 +225,11 @@ public final class ClassInfo {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final ClassInfo other = (ClassInfo) obj;
-        if (!Objects.equals(this.cLoaderId, other.cLoaderId)) {
+        ClassInfo other = (ClassInfo) obj;
+        if (!Objects.equals(cLoaderId, other.cLoaderId)) {
             return false;
         }
-        return Objects.equals(this.classId, other.classId);
+        return Objects.equals(classId, other.classId);
     }
 
     @Override
@@ -237,7 +237,7 @@ public final class ClassInfo {
         return "ClassInfo{" + "cLoaderId=" + cLoaderId + ", classId=" + classId + ", supertypes=" + supertypes + '}';
     }
 
-    private static abstract class BaseClassName implements CharSequence {
+    private abstract static class BaseClassName implements CharSequence {
         protected final CharSequence wrapped;
         private String str = null;
 
@@ -300,8 +300,8 @@ public final class ClassInfo {
 
         public ClassName(CharSequence cName) {
             this.cName = cName;
-            this.jcName = new JavaClassName(cName);
-            this.icName = new InternalClassName(cName);
+            jcName = new JavaClassName(cName);
+            icName = new InternalClassName(cName);
         }
 
         public CharSequence getJavaClassName() {
@@ -347,7 +347,7 @@ public final class ClassInfo {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final ClassName other = (ClassName) obj;
+            ClassName other = (ClassName) obj;
             if (cName.length() != other.cName.length()) {
                 return false;
             }

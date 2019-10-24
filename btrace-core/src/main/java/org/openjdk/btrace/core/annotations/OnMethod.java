@@ -104,7 +104,7 @@ public @interface OnMethod {
      * Identifies exact "location" or "point" of interest to
      * probe within the set of methods.
      */
-    Location location() default @Location();
+    Location location() default @Location;
 
     /**
      * Activate this probe according to instrumentation level.

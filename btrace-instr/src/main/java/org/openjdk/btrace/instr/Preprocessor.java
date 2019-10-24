@@ -1072,7 +1072,7 @@ final class Preprocessor {
                 Object val = iter.next();
                 switch (name) {
                     case "value":
-                        svcType = (String) ((String[]) val)[1];
+                        svcType = ((String[]) val)[1];
                         break;
                     case "factoryMethod":
                         fctryMethod = (String) val;
@@ -1350,7 +1350,7 @@ final class Preprocessor {
     private int getReturnMethodParameter(MethodNode mn) {
         if (mn.visibleParameterAnnotations != null) {
             for (int i = 0; i < mn.visibleParameterAnnotations.length; i++) {
-                List paList = (List) mn.visibleParameterAnnotations[i];
+                List paList = mn.visibleParameterAnnotations[i];
                 if (paList != null) {
                     for (Object anObj : paList) {
                         AnnotationNode an = (AnnotationNode) anObj;

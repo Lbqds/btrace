@@ -53,8 +53,6 @@ public final class AggregationKey {
 
     public AggregationKey(Object[] elements) {
 
-        super();
-
         // Validate that no unusual datatypes are in the key. These
         // values may end up getting serialized to the client so we do not want
         // anything unusual.
@@ -74,7 +72,7 @@ public final class AggregationKey {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
+        int prime = 31;
         int result = 1;
         result = prime * result + Arrays.hashCode(elements);
         return result;
@@ -91,7 +89,7 @@ public final class AggregationKey {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final AggregationKey other = (AggregationKey) obj;
+        AggregationKey other = (AggregationKey) obj;
         return Arrays.equals(elements, other.elements);
     }
 }

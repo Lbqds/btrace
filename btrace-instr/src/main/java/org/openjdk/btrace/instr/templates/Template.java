@@ -43,7 +43,7 @@ import java.util.Set;
  * @since 1.3
  */
 public final class Template {
-    final static String OWNER = "#";
+    static final String OWNER = "#";
     private final String name;
     private final String sig;
     private final Set<String> tags = new HashSet<>();
@@ -53,14 +53,14 @@ public final class Template {
     public Template(String name, String sig) {
         this.name = name;
         this.sig = sig;
-        this.id = getId(OWNER, name, sig);
+        id = getId(OWNER, name, sig);
     }
 
     public Template(String name, String sig, String... tags) {
         this.name = name;
         this.sig = sig;
         this.tags.addAll(Arrays.asList(tags));
-        this.id = getId(OWNER, name, sig);
+        id = getId(OWNER, name, sig);
     }
 
     static String getId(String owner, String name, String sig) {
@@ -105,7 +105,7 @@ public final class Template {
     }
 
     public Set<String> getTags() {
-        return Collections.unmodifiableSet(this.tags);
+        return Collections.unmodifiableSet(tags);
     }
 
     void setTags(String... tags) {
@@ -141,7 +141,7 @@ public final class Template {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 97 * hash + (this.name != null ? this.name.hashCode() : 0);
+        hash = 97 * hash + (name != null ? name.hashCode() : 0);
         return hash;
     }
 
@@ -153,8 +153,8 @@ public final class Template {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Template other = (Template) obj;
-        return !((this.name == null) ? (other.name != null) : !this.name.equals(other.name));
+        Template other = (Template) obj;
+        return (name == null) ? (other.name == null) : name.equals(other.name);
     }
 
     @Override

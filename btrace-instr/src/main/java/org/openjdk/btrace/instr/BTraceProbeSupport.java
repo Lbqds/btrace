@@ -50,16 +50,16 @@ public final class BTraceProbeSupport {
     private String className, origName;
 
     BTraceProbeSupport(DebugSupport dbg) {
-        this.onMethods = new ArrayList<>();
-        this.onProbes = new ArrayList<>();
-        this.serviceFields = new HashMap<>();
-        this.debug = dbg;
+        onMethods = new ArrayList<>();
+        onProbes = new ArrayList<>();
+        serviceFields = new HashMap<>();
+        debug = dbg;
     }
 
     void setClassName(String name) {
-        this.origName = name;
+        origName = name;
         String clientName = BTraceRuntimeImpl.getClientName(name);
-        this.className = clientName != null ? clientName : name;
+        className = clientName != null ? clientName : name;
         classRenamed = !className.equals(name);
     }
 
@@ -77,7 +77,7 @@ public final class BTraceProbeSupport {
 
     String translateOwner(String owner) {
         if (owner.equals(origName)) {
-            return this.getClassName(true);
+            return getClassName(true);
         }
         return owner;
     }
@@ -87,8 +87,8 @@ public final class BTraceProbeSupport {
     }
 
     Collection<OnMethod> getApplicableHandlers(BTraceClassReader cr) {
-        final Collection<OnMethod> applicables = new ArrayList<>(onMethods.size());
-        final String targetName = cr.getJavaClassName();
+        Collection<OnMethod> applicables = new ArrayList<>(onMethods.size());
+        String targetName = cr.getJavaClassName();
 
         outer:
         for (OnMethod om : onMethods) {
@@ -192,7 +192,7 @@ public final class BTraceProbeSupport {
     private ClassFilter getClassFilter() {
         synchronized (filterLock) {
             if (filter == null) {
-                this.filter = new ClassFilter(onmethods());
+                filter = new ClassFilter(onmethods());
             }
             return filter;
         }

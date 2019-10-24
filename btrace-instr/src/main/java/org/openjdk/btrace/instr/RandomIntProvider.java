@@ -32,11 +32,11 @@ import org.openjdk.btrace.instr.random.ThreadLocalRandomIntProvider;
  * @author Jaroslav Bachorik
  */
 @SuppressWarnings("LiteralClassName")
-abstract public class RandomIntProvider {
+public abstract class RandomIntProvider {
     private static final RandomIntProvider rndIntProvider;
     // for the testability purposes; BTraceRuntime initializes Unsafe instance
     // and fails under JUnit
-    private static boolean useBtraceEnter = true;
+    private static final boolean useBtraceEnter = true;
 
     static {
         boolean entered = false;
@@ -67,5 +67,5 @@ abstract public class RandomIntProvider {
         return rndIntProvider;
     }
 
-    abstract public int nextInt(int bound);
+    public abstract int nextInt(int bound);
 }

@@ -70,7 +70,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         this.desc = desc;
 
         initLocals((access & ACC_STATIC) == 0);
-        this.variableMapper = new VariableMapper(argsSize);
+        variableMapper = new VariableMapper(argsSize);
     }
 
     private static Object toSlotType(Type t) {
@@ -110,10 +110,10 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         switch (type) {
             case F_NEW: // fallthrough
             case F_FULL: {
-                this.locals.clear();
+                locals.clear();
                 this.stack.reset();
 
-                this.locals.addAll(Arrays.asList(local).subList(0, nLocal));
+                locals.addAll(Arrays.asList(local).subList(0, nLocal));
                 localsTailPtr = nLocal;
 
                 for (int i = 0; i < nStack; i++) {
@@ -134,13 +134,13 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
             }
             case F_APPEND: {
                 this.stack.reset();
-                int top = this.locals.size();
+                int top = locals.size();
                 for (int i = 0; i < nLocal; i++) {
                     Object e = local[i];
                     if (localsTailPtr < top) {
-                        this.locals.set(localsTailPtr, e);
+                        locals.set(localsTailPtr, e);
                     } else {
-                        this.locals.add(e);
+                        locals.add(e);
                     }
                     localsTailPtr++;
                 }
@@ -149,7 +149,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
             case F_CHOP: {
                 this.stack.reset();
                 for (int i = 0; i < nLocal; i++) {
-                    this.locals.remove(--localsTailPtr);
+                    locals.remove(--localsTailPtr);
                 }
                 break;
             }
@@ -248,25 +248,25 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         super.visitJumpInsn(opcode, label);
         pc++;
         switch (opcode) {
-            case Opcodes.IFEQ:
-            case Opcodes.IFGE:
-            case Opcodes.IFGT:
-            case Opcodes.IFLE:
-            case Opcodes.IFLT:
-            case Opcodes.IFNE:
-            case Opcodes.IFNONNULL:
-            case Opcodes.IFNULL: {
+            case IFEQ:
+            case IFGE:
+            case IFGT:
+            case IFLE:
+            case IFLT:
+            case IFNE:
+            case IFNONNULL:
+            case IFNULL: {
                 stack.pop();
                 break;
             }
-            case Opcodes.IF_ACMPEQ:
-            case Opcodes.IF_ACMPNE:
-            case Opcodes.IF_ICMPEQ:
-            case Opcodes.IF_ICMPGE:
-            case Opcodes.IF_ICMPGT:
-            case Opcodes.IF_ICMPLE:
-            case Opcodes.IF_ICMPLT:
-            case Opcodes.IF_ICMPNE: {
+            case IF_ACMPEQ:
+            case IF_ACMPNE:
+            case IF_ICMPEQ:
+            case IF_ICMPGE:
+            case IF_ICMPGT:
+            case IF_ICMPLE:
+            case IF_ICMPLT:
+            case IF_ICMPNE: {
                 stack.pop();
                 stack.pop();
                 break;
@@ -274,7 +274,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         }
         jumpTargetStates.put(label, new SavedState(
                         variableMapper, localTypes, stack, newLocals,
-                        opcode == Opcodes.GOTO || opcode == Opcodes.JSR ?
+                        opcode == GOTO || opcode == JSR ?
                                 SavedState.UNCONDITIONAL : SavedState.CONDITIONAL
                 )
         );
@@ -309,7 +309,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
             }
         }
 
-        if (opcode != Opcodes.INVOKESTATIC) {
+        if (opcode != INVOKESTATIC) {
             stack.pop();
         }
         super.visitMethodInsn(opcode, owner, name, desc, itfc);
@@ -318,7 +318,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         if (!ret.equals(Type.VOID_TYPE)) {
             pushToStack(ret);
         }
-        if (opcode == Opcodes.INVOKESPECIAL && name.equals("<init>")) {
+        if (opcode == INVOKESPECIAL && name.equals("<init>")) {
             if (stack.peek() instanceof Label) {
                 stack.pop();
                 pushToStack(Type.getObjectType(owner));
@@ -332,13 +332,13 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         super.visitFieldInsn(opcode, owner, name, desc);
         pc++;
 
-        if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) {
+        if (opcode == PUTFIELD || opcode == PUTSTATIC) {
             popFromStack(t);
         }
-        if (opcode == Opcodes.GETFIELD || opcode == Opcodes.PUTFIELD) {
+        if (opcode == GETFIELD || opcode == PUTFIELD) {
             stack.pop(); // pop 'this'
         }
-        if (opcode == Opcodes.GETFIELD || opcode == Opcodes.GETSTATIC) {
+        if (opcode == GETFIELD || opcode == GETSTATIC) {
             pushToStack(t);
         }
     }
@@ -349,22 +349,22 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         pc++;
 
         switch (opcode) {
-            case Opcodes.NEW: {
+            case NEW: {
                 pushToStack(Type.getObjectType(type));
                 break;
             }
-            case Opcodes.ANEWARRAY: {
+            case ANEWARRAY: {
                 stack.pop();
 
                 pushToStack(Type.getType("[L" + type + ";"));
                 break;
             }
-            case Opcodes.INSTANCEOF: {
+            case INSTANCEOF: {
                 stack.pop();
                 pushToStack(Type.BOOLEAN_TYPE);
                 break;
             }
-            case Opcodes.CHECKCAST: {
+            case CHECKCAST: {
                 stack.pop();
                 pushToStack(Type.getObjectType(type));
                 break;
@@ -457,12 +457,12 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         pc++;
 
         switch (opcode) {
-            case Opcodes.BIPUSH:
-            case Opcodes.SIPUSH: {
+            case BIPUSH:
+            case SIPUSH: {
                 stack.push(INTEGER);
                 break;
             }
-            case Opcodes.NEWARRAY: {
+            case NEWARRAY: {
                 popFromStack(Type.INT_TYPE); // size
                 switch (operand) {
                     case T_BOOLEAN: {
@@ -509,37 +509,37 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         pc++;
 
         switch (opcode) {
-            case Opcodes.ACONST_NULL: {
-                stack.push(Opcodes.NULL);
+            case ACONST_NULL: {
+                stack.push(NULL);
                 break;
             }
-            case Opcodes.ICONST_0:
-            case Opcodes.ICONST_1:
-            case Opcodes.ICONST_2:
-            case Opcodes.ICONST_3:
-            case Opcodes.ICONST_4:
-            case Opcodes.ICONST_5:
-            case Opcodes.ICONST_M1: {
+            case ICONST_0:
+            case ICONST_1:
+            case ICONST_2:
+            case ICONST_3:
+            case ICONST_4:
+            case ICONST_5:
+            case ICONST_M1: {
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.FCONST_0:
-            case Opcodes.FCONST_1:
-            case Opcodes.FCONST_2: {
+            case FCONST_0:
+            case FCONST_1:
+            case FCONST_2: {
                 pushToStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.LCONST_0:
-            case Opcodes.LCONST_1: {
+            case LCONST_0:
+            case LCONST_1: {
                 pushToStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.DCONST_0:
-            case Opcodes.DCONST_1: {
+            case DCONST_0:
+            case DCONST_1: {
                 pushToStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.AALOAD: {
+            case AALOAD: {
                 stack.pop(); // index
                 Object target = stack.pop();
 
@@ -562,83 +562,83 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 }
                 break;
             }
-            case Opcodes.IALOAD: {
+            case IALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.FALOAD: {
+            case FALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.BALOAD: {
+            case BALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.BYTE_TYPE);
                 break;
             }
-            case Opcodes.CALOAD: {
+            case CALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.CHAR_TYPE);
                 break;
             }
-            case Opcodes.SALOAD: {
+            case SALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.SHORT_TYPE);
                 break;
             }
-            case Opcodes.LALOAD: {
+            case LALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.DALOAD: {
+            case DALOAD: {
                 stack.pop();
                 stack.pop();
 
                 pushToStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.AASTORE:
-            case Opcodes.IASTORE:
-            case Opcodes.FASTORE:
-            case Opcodes.BASTORE:
-            case Opcodes.CASTORE:
-            case Opcodes.SASTORE:
-            case Opcodes.LASTORE:
-            case Opcodes.DASTORE: {
+            case AASTORE:
+            case IASTORE:
+            case FASTORE:
+            case BASTORE:
+            case CASTORE:
+            case SASTORE:
+            case LASTORE:
+            case DASTORE: {
                 stack.pop(); // val
                 stack.pop(); // index
                 stack.pop(); // arrayref
 
                 break;
             }
-            case Opcodes.POP: {
+            case POP: {
                 stack.pop1();
                 break;
             }
-            case Opcodes.POP2: {
+            case POP2: {
                 stack.pop1();
                 stack.pop1();
                 break;
             }
-            case Opcodes.DUP: {
+            case DUP: {
                 stack.push1(stack.peek());
                 break;
             }
-            case Opcodes.DUP_X1: {
+            case DUP_X1: {
                 Object x = stack.pop1();
                 Object y = stack.pop1();
                 stack.push1(x);
@@ -646,7 +646,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 stack.push1(x);
                 break;
             }
-            case Opcodes.DUP_X2: {
+            case DUP_X2: {
                 Object x = stack.pop1();
                 Object y = stack.pop1();
                 Object z = stack.pop1();
@@ -656,7 +656,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 stack.push1(x);
                 break;
             }
-            case Opcodes.DUP2: {
+            case DUP2: {
                 Object x = stack.pop1();
                 Object y = stack.peek();
                 stack.push1(x);
@@ -664,7 +664,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 stack.push1(x);
                 break;
             }
-            case Opcodes.DUP2_X1: {
+            case DUP2_X1: {
                 Object x2 = stack.pop1();
                 Object x1 = stack.pop1();
                 Object y = stack.pop1();
@@ -675,7 +675,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 stack.push1(x2);
                 break;
             }
-            case Opcodes.DUP2_X2: {
+            case DUP2_X2: {
                 Object x2 = stack.pop1();
                 Object x1 = stack.pop1();
                 Object y2 = stack.pop1();
@@ -688,193 +688,193 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 stack.push1(x2);
                 break;
             }
-            case Opcodes.SWAP: {
+            case SWAP: {
                 Object x = stack.pop1();
                 Object y = stack.pop1();
                 stack.push1(x);
                 stack.push1(y);
                 break;
             }
-            case Opcodes.IADD:
-            case Opcodes.ISUB:
-            case Opcodes.IMUL:
-            case Opcodes.IDIV:
-            case Opcodes.IREM:
-            case Opcodes.IAND:
-            case Opcodes.IOR:
-            case Opcodes.IXOR:
-            case Opcodes.ISHR:
-            case Opcodes.ISHL:
-            case Opcodes.IUSHR: {
+            case IADD:
+            case ISUB:
+            case IMUL:
+            case IDIV:
+            case IREM:
+            case IAND:
+            case IOR:
+            case IXOR:
+            case ISHR:
+            case ISHL:
+            case IUSHR: {
                 popFromStack(Type.INT_TYPE);
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.FADD:
-            case Opcodes.FSUB:
-            case Opcodes.FMUL:
-            case Opcodes.FDIV:
-            case Opcodes.FREM: {
+            case FADD:
+            case FSUB:
+            case FMUL:
+            case FDIV:
+            case FREM: {
                 popFromStack(Type.FLOAT_TYPE);
                 popFromStack(Type.FLOAT_TYPE);
                 pushToStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.LADD:
-            case Opcodes.LSUB:
-            case Opcodes.LMUL:
-            case Opcodes.LDIV:
-            case Opcodes.LREM:
-            case Opcodes.LAND:
-            case Opcodes.LOR:
-            case Opcodes.LXOR:
-            case Opcodes.LSHR:
-            case Opcodes.LSHL:
-            case Opcodes.LUSHR: {
+            case LADD:
+            case LSUB:
+            case LMUL:
+            case LDIV:
+            case LREM:
+            case LAND:
+            case LOR:
+            case LXOR:
+            case LSHR:
+            case LSHL:
+            case LUSHR: {
                 popFromStack(Type.LONG_TYPE);
                 popFromStack(Type.LONG_TYPE);
                 pushToStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.DADD:
-            case Opcodes.DSUB:
-            case Opcodes.DMUL:
-            case Opcodes.DDIV:
-            case Opcodes.DREM: {
+            case DADD:
+            case DSUB:
+            case DMUL:
+            case DDIV:
+            case DREM: {
                 popFromStack(Type.DOUBLE_TYPE);
                 popFromStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.I2L: {
+            case I2L: {
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.I2F: {
+            case I2F: {
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.I2B: {
+            case I2B: {
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.BYTE_TYPE);
                 break;
             }
-            case Opcodes.I2C: {
+            case I2C: {
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.CHAR_TYPE);
                 break;
             }
-            case Opcodes.I2S: {
+            case I2S: {
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.SHORT_TYPE);
                 break;
             }
-            case Opcodes.I2D: {
+            case I2D: {
                 popFromStack(Type.INT_TYPE);
                 pushToStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.L2I: {
+            case L2I: {
                 popFromStack(Type.LONG_TYPE);
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.L2F: {
+            case L2F: {
                 popFromStack(Type.LONG_TYPE);
                 pushToStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.L2D: {
+            case L2D: {
                 popFromStack(Type.LONG_TYPE);
                 pushToStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.F2I: {
+            case F2I: {
                 popFromStack(Type.FLOAT_TYPE);
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.F2L: {
+            case F2L: {
                 popFromStack(Type.FLOAT_TYPE);
                 pushToStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.F2D: {
+            case F2D: {
                 popFromStack(Type.FLOAT_TYPE);
                 pushToStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.D2I: {
+            case D2I: {
                 popFromStack(Type.DOUBLE_TYPE);
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.D2F: {
+            case D2F: {
                 popFromStack(Type.DOUBLE_TYPE);
                 pushToStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.D2L: {
+            case D2L: {
                 popFromStack(Type.DOUBLE_TYPE);
                 pushToStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.LCMP: {
+            case LCMP: {
                 popFromStack(Type.LONG_TYPE);
                 popFromStack(Type.LONG_TYPE);
 
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.FCMPL:
-            case Opcodes.FCMPG: {
+            case FCMPL:
+            case FCMPG: {
                 popFromStack(Type.FLOAT_TYPE);
                 popFromStack(Type.FLOAT_TYPE);
 
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.DCMPL:
-            case Opcodes.DCMPG: {
+            case DCMPL:
+            case DCMPG: {
                 popFromStack(Type.DOUBLE_TYPE);
                 popFromStack(Type.DOUBLE_TYPE);
 
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.IRETURN: {
+            case IRETURN: {
                 popFromStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.LRETURN: {
+            case LRETURN: {
                 popFromStack(Type.LONG_TYPE);
                 break;
             }
-            case Opcodes.FRETURN: {
+            case FRETURN: {
                 popFromStack(Type.FLOAT_TYPE);
                 break;
             }
-            case Opcodes.DRETURN: {
+            case DRETURN: {
                 popFromStack(Type.DOUBLE_TYPE);
                 break;
             }
-            case Opcodes.ARETURN: {
+            case ARETURN: {
                 popFromStack(Type.getReturnType(desc));
                 break;
             }
-            case Opcodes.ATHROW: {
+            case ATHROW: {
                 popFromStack(Constants.THROWABLE_TYPE);
                 break;
             }
-            case Opcodes.ARRAYLENGTH: {
+            case ARRAYLENGTH: {
                 stack.pop();
                 pushToStack(Type.INT_TYPE);
                 break;
             }
-            case Opcodes.MONITORENTER:
-            case Opcodes.MONITOREXIT: {
+            case MONITORENTER:
+            case MONITOREXIT: {
                 stack.pop();
                 break;
             }
@@ -882,15 +882,15 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
     }
 
     @Override
-    public void visitIincInsn(final int var, final int increment) {
+    public void visitIincInsn(int var, int increment) {
         super.visitIincInsn(variableMapper.remap(var, 1), increment);
         pc++;
     }
 
     @Override
-    public void visitLocalVariable(final String name, final String desc,
-                                   final String signature, final Label start, final Label end,
-                                   final int index) {
+    public void visitLocalVariable(String name, String desc,
+                                   String signature, Label start, Label end,
+                                   int index) {
         int newIndex = variableMapper.map(index);
         if (newIndex != 0xFFFFFFFF) {
             super.visitLocalVariable(name, desc, signature, start, end, newIndex == Integer.MIN_VALUE ? 0 : newIndex);
@@ -1023,7 +1023,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
     public int storeAsNew() {
         Type t = fromSlotType(peekFromStack());
         int idx = newVar(t);
-        visitVarInsn(t.getOpcode(Opcodes.ISTORE), idx);
+        visitVarInsn(t.getOpcode(ISTORE), idx);
         return idx;
     }
 
@@ -1202,7 +1202,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
         @Override
         public int hashCode() {
             int hash = 3;
-            hash = 97 * hash + this.idx;
+            hash = 97 * hash + idx;
             return hash;
         }
 
@@ -1217,11 +1217,8 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final LocalVarSlot other = (LocalVarSlot) obj;
-            if (this.idx != other.idx) {
-                return false;
-            }
-            return true;
+            LocalVarSlot other = (LocalVarSlot) obj;
+            return idx == other.idx;
         }
     }
 

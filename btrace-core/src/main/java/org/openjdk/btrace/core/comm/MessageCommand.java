@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -60,7 +61,7 @@ public class MessageCommand extends DataCommand {
     @Override
     protected void write(ObjectOutput out) throws IOException {
         out.writeLong(time);
-        byte[] bytes = msg != null ? msg.getBytes("utf-8") : new byte[0];
+        byte[] bytes = msg != null ? msg.getBytes(StandardCharsets.UTF_8) : new byte[0];
         out.writeInt(bytes.length);
         if (bytes.length > 0) {
             out.write(bytes);
@@ -79,7 +80,7 @@ public class MessageCommand extends DataCommand {
             ptr += in.read(bytes, ptr, len - ptr);
         }
 
-        msg = new String(bytes, "utf-8");
+        msg = new String(bytes, StandardCharsets.UTF_8);
     }
 
     public long getTime() {

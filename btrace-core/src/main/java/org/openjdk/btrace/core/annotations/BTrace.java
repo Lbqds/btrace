@@ -41,17 +41,16 @@ import java.lang.annotation.Target;
 public @interface BTrace {
     // If this trace is exposed as MXBean, then this tells
     // the name of the MXBean.
-    public String name() default "";
+    String name() default "";
 
     // description of this trace class.
-    public String description() default "";
+    String description() default "";
     // having "unsafe" set to true the script will be run in unsafe mode
 
     @Deprecated
     /**
      * @deprecated use {@linkplain BTrace#trusted()} instead
-     */
-    public boolean unsafe() default false;
+     */ boolean unsafe() default false;
 
-    public boolean trusted() default false;
+    boolean trusted() default false;
 }

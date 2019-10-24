@@ -159,7 +159,7 @@ public class GridDataCommand extends DataCommand {
                 }
 
                 // Format the text
-                String usedFormat = this.format;
+                String usedFormat = format;
                 if (usedFormat == null || usedFormat.length() == 0) {
                     StringBuilder buffer = new StringBuilder();
                     for (int i = 0; i < printRow.length; i++) {

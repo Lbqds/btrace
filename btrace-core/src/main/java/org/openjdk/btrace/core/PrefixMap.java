@@ -65,7 +65,7 @@ public class PrefixMap {
         private CharSequence value;
 
         public Node() {
-            this.value = null;
+            value = null;
         }
 
         public Node getReferencedNode(char ch) {
@@ -79,7 +79,7 @@ public class PrefixMap {
         }
 
         public void setValue(CharSequence val) {
-            this.value = val;
+            value = val;
         }
 
     }

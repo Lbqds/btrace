@@ -29,8 +29,8 @@ import org.openjdk.btrace.services.api.RuntimeContext;
 /**
  * @author Jaroslav Bachorik
  */
-abstract public class RuntimeService implements BTraceService {
-    final protected RuntimeContext rt;
+public abstract class RuntimeService implements BTraceService {
+    protected final RuntimeContext rt;
 
     public RuntimeService(RuntimeContext rt) {
         this.rt = rt;

@@ -50,19 +50,20 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public class MethodInstrumentor extends BTraceMethodVisitor {
     protected final Assembler asm;
+    MethodInstrumentor parent = null;
     private final int access;
     private final String parentClz;
     private final String superClz;
     private final String name;
     private final String desc;
     private final ClassLoader cl;
-    protected int levelCheckVar = Integer.MIN_VALUE;
-    protected MethodInstrumentor parent = null;
-    private Type returnType;
-    private Type[] argumentTypes;
-    private Map<Integer, Type> extraTypes;
+    private int levelCheckVar = Integer.MIN_VALUE;
+    private final Type returnType;
+    private final Type[] argumentTypes;
+    private final Map<Integer, Type> extraTypes;
     private Label skipLabel;
     private boolean prologueVisited = false;
+
     public MethodInstrumentor(
             ClassLoader cl, MethodVisitor mv, MethodInstrumentorHelper mHelper,
             String parentClz, String superClz, int access, String name, String desc
@@ -73,10 +74,10 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
         this.access = access;
         this.name = name;
         this.desc = desc;
-        this.returnType = Type.getReturnType(desc);
-        this.argumentTypes = Type.getArgumentTypes(desc);
+        returnType = Type.getReturnType(desc);
+        argumentTypes = Type.getArgumentTypes(desc);
         extraTypes = new HashMap<>();
-        this.asm = new Assembler(this, mHelper);
+        asm = new Assembler(this, mHelper);
         this.cl = cl;
     }
 
@@ -88,7 +89,7 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
     }
 
     @Override
-    final public void visitCode() {
+    public final void visitCode() {
         if (!isConstructor()) {
             prologueVisited = true;
             visitMethodPrologue();
@@ -213,7 +214,7 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
         if ((access & ACC_STATIC) != 0) {
             throw new IllegalStateException("no 'this' inside static method");
         }
-        super.visitVarInsn(ALOAD, 0);
+        visitVarInsn(ALOAD, 0);
     }
 
     public int[] backupStack(Type[] methodArgTypes, boolean isStatic) {
@@ -406,7 +407,7 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
                 // must store the level in a local var to be consistent
                 asm.compareLevel(className, level).dup();
                 levelCheckVar = storeAsNew();
-                asm.jump(Opcodes.IFLT, l);
+                asm.jump(IFLT, l);
             } else {
                 asm.addLevelCheck(className, level, l);
             }
@@ -429,7 +430,7 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
             if (isLevelCheck(level)) {
                 l = new Label();
                 asm.loadLocal(Type.INT_TYPE, levelCheckVar)
-                        .jump(Opcodes.IFLT, l);
+                        .jump(IFLT, l);
             }
         } else {
             l = levelCheck(om, className);
@@ -442,18 +443,18 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
         System.err.println(out);
     }
 
-    final protected static class ValidationResult {
-        final static private int[] EMPTY_ARRAY = new int[0];
-        final protected static ValidationResult INVALID = new ValidationResult(false);
-        final protected static ValidationResult ANY = new ValidationResult(true);
-        final private boolean isValid;
-        final private int[] argsIndex;
+    protected static final class ValidationResult {
+        private static final int[] EMPTY_ARRAY = new int[0];
+        protected static final ValidationResult INVALID = new ValidationResult(false);
+        protected static final ValidationResult ANY = new ValidationResult(true);
+        private final boolean isValid;
+        private final int[] argsIndex;
 
         public ValidationResult(boolean valid, int[] argsIndex) {
             if (argsIndex == null) {
                 Thread.dumpStack();
             }
-            this.isValid = valid;
+            isValid = valid;
             this.argsIndex = argsIndex;
         }
 
@@ -485,23 +486,23 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final ValidationResult other = (ValidationResult) obj;
-            if (this.isValid != other.isValid) {
+            ValidationResult other = (ValidationResult) obj;
+            if (isValid != other.isValid) {
                 return false;
             }
-            return Arrays.equals(this.argsIndex, other.argsIndex);
+            return Arrays.equals(argsIndex, other.argsIndex);
         }
 
         @Override
         public int hashCode() {
             int hash = 5;
-            hash = 59 * hash + (this.isValid ? 1 : 0);
-            hash = 59 * hash + Arrays.hashCode(this.argsIndex);
+            hash = 59 * hash + (isValid ? 1 : 0);
+            hash = 59 * hash + Arrays.hashCode(argsIndex);
             return hash;
         }
     }
 
-    public static abstract class ArgumentProvider {
+    public abstract static class ArgumentProvider {
         static final Comparator<ArgumentProvider> COMPARATOR = new Comparator<ArgumentProvider>() {
             @Override
             public final int compare(ArgumentProvider o1, ArgumentProvider o2) {
@@ -532,13 +533,13 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
             return index;
         }
 
-        final public void provide() {
+        public final void provide() {
             if (index > -1) {
                 doProvide();
             }
         }
 
-        abstract protected void doProvide();
+        protected abstract void doProvide();
     }
 
     private static class LocalVarArgProvider extends ArgumentProvider {
@@ -573,7 +574,7 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
     }
 
     private static class ConstantArgProvider extends ArgumentProvider {
-        private Object constant;
+        private final Object constant;
 
         public ConstantArgProvider(Assembler asm, int index, Object constant) {
             super(asm, index);
@@ -593,7 +594,7 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
 
     protected class AnyTypeArgProvider extends ArgumentProvider {
         private int argPtr;
-        private Type[] myArgTypes;
+        private final Type[] myArgTypes;
 
         public AnyTypeArgProvider(Assembler asm, int index, int basePtr) {
             this(asm, index, basePtr, argumentTypes);
@@ -601,8 +602,8 @@ public class MethodInstrumentor extends BTraceMethodVisitor {
 
         public AnyTypeArgProvider(Assembler asm, int index, int basePtr, Type[] argTypes) {
             super(asm, index);
-            this.argPtr = basePtr;
-            this.myArgTypes = argTypes;
+            argPtr = basePtr;
+            myArgTypes = argTypes;
         }
 
 

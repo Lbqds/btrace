@@ -120,9 +120,9 @@ abstract class Client implements CommandListener {
     private Client(Instrumentation inst, ArgsMap argsMap, SharedSettings s, BTraceTransformer t) {
         this.inst = inst;
         this.argsMap = argsMap;
-        this.settings = s != null ? s : SharedSettings.GLOBAL;
-        this.transformer = t;
-        this.debug = new DebugSupport(settings);
+        settings = s != null ? s : SharedSettings.GLOBAL;
+        transformer = t;
+        debug = new DebugSupport(settings);
 
         setupWriter();
     }
@@ -200,7 +200,7 @@ abstract class Client implements CommandListener {
             flushInterval = 5; // default
         }
 
-        final int flushSec = flushInterval;
+        int flushSec = flushInterval;
         if (flushSec > -1) {
             flusher = new Timer("BTrace FileClient Flusher", true);
             flusher.scheduleAtFixedRate(new TimerTask() {
@@ -265,6 +265,7 @@ abstract class Client implements CommandListener {
 
     protected synchronized void onExit(int exitCode) {
         if (!shuttingDown) {
+            shuttingDown = true;
             if (out != null) {
                 out.flush();
             }
@@ -302,7 +303,7 @@ abstract class Client implements CommandListener {
 
     protected final Class loadClass(InstrumentCommand instr, boolean canLoadPack) throws IOException {
         ArgsMap args = instr.getArguments();
-        this.btraceCode = instr.getCode();
+        btraceCode = instr.getCode();
         try {
             probe = load(btraceCode, ArgsMap.merge(argsMap, args), canLoadPack);
             if (probe == null) {
@@ -327,7 +328,7 @@ abstract class Client implements CommandListener {
         if (isDebug()) {
             debugPrint("creating BTraceRuntime instance for " + probe.getClassName());
         }
-        this.runtime = new BTraceRuntimeImpl(probe.getClassName(), args, this, debug, inst);
+        runtime = new BTraceRuntimeImpl(probe.getClassName(), args, this, debug, inst);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {

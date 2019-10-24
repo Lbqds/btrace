@@ -88,22 +88,22 @@ final class XMLSerializer {
 
     // class that handles XML serialization
     private static class Serializer {
-        private static CharsetEncoder encoder = Charset.forName("8859_1").newEncoder();
+        private static final CharsetEncoder encoder = Charset.forName("8859_1").newEncoder();
 
         // out on which we will write XML
-        private PrintWriter out;
+        private final PrintWriter out;
         // map to maintain objects serialized already    
-        private Map<Object, String> objToId;
+        private final Map<Object, String> objToId;
         // next object id (unique id for objects)
         private long nextId;
 
         Serializer(Writer writer) {
             if (writer instanceof PrintWriter) {
-                this.out = (PrintWriter) writer;
+                out = (PrintWriter) writer;
             } else {
-                this.out = new PrintWriter(writer);
+                out = new PrintWriter(writer);
             }
-            this.objToId =
+            objToId =
                     new IdentityHashMap<Object, String>();
             writeln("<?xml version='1.0' encoding='ISO-8859-1'?>");
         }
@@ -173,7 +173,7 @@ final class XMLSerializer {
         private static String encodeText(String string) {
             StringBuilder sb = new StringBuilder();
             int index = 0;
-            final int len = string.length();
+            int len = string.length();
             while (index < len) {
                 int point = string.codePointAt(index);
                 int count = Character.charCount(point);
@@ -287,7 +287,7 @@ final class XMLSerializer {
 
         private void writeArray(String name, Object array) {
             arrayStart(name, array);
-            final int len = Array.getLength(array);
+            int len = Array.getLength(array);
             if (len == 0) {
                 arrayEnd(name, array);
                 return;

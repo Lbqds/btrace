@@ -42,7 +42,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Jaroslav Bachorik
  */
 abstract class TraceOutputWriter extends Writer {
-    final protected DebugSupport debug;
+    protected final DebugSupport debug;
 
     protected TraceOutputWriter(SharedSettings settings) {
         debug = new DebugSupport(settings);
@@ -97,8 +97,8 @@ abstract class TraceOutputWriter extends Writer {
         }
     }
 
-    static private class SimpleFileOutput extends TraceOutputWriter {
-        final private FileWriter delegate;
+    private static class SimpleFileOutput extends TraceOutputWriter {
+        private final FileWriter delegate;
 
         @SuppressWarnings("DefaultCharset")
         public SimpleFileOutput(File output, SharedSettings settings) throws IOException {
@@ -132,9 +132,9 @@ abstract class TraceOutputWriter extends Writer {
     }
 
     @SuppressWarnings("DefaultCharset")
-    static abstract private class RollingFileWriter extends TraceOutputWriter {
+    private abstract static class RollingFileWriter extends TraceOutputWriter {
         protected final SharedSettings settings;
-        final private ReentrantReadWriteLock writerLock = new ReentrantReadWriteLock();
+        private final ReentrantReadWriteLock writerLock = new ReentrantReadWriteLock();
         private final String path, baseName;
         // @GuardedBy writerLock
         private FileWriter currentFileWriter;
@@ -155,7 +155,7 @@ abstract class TraceOutputWriter extends Writer {
         }
 
         @Override
-        final public void close() throws IOException {
+        public final void close() throws IOException {
             try {
                 writerLock.readLock().lock();
                 currentFileWriter.close();
@@ -165,7 +165,7 @@ abstract class TraceOutputWriter extends Writer {
         }
 
         @Override
-        final public void flush() throws IOException {
+        public final void flush() throws IOException {
             try {
                 writerLock.readLock().lock();
                 currentFileWriter.flush();
@@ -179,7 +179,7 @@ abstract class TraceOutputWriter extends Writer {
         }
 
         @Override
-        final public void write(char[] cbuf, int off, int len) throws IOException {
+        public final void write(char[] cbuf, int off, int len) throws IOException {
             try {
                 writerLock.readLock().lock();
                 currentFileWriter.write(cbuf, off, len);
@@ -215,10 +215,10 @@ abstract class TraceOutputWriter extends Writer {
             return new FileWriter(scriptOutputFile_renameFrom);
         }
 
-        abstract protected boolean needsRoll();
+        protected abstract boolean needsRoll();
     }
 
-    static private class TimeBasedRollingFileWriter extends RollingFileWriter {
+    private static class TimeBasedRollingFileWriter extends RollingFileWriter {
         private final TimeUnit unit = TimeUnit.MILLISECONDS;
         private long lastTimeStamp = System.currentTimeMillis();
 

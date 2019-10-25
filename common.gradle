@@ -48,9 +48,9 @@ artifacts {
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
-        groupId = group
+        groupId = group ?: "org.openjdk.btrace"
         artifactId = mavenArtifactId
-        version = version
+        version = version ?: "0"
     }
 }
 

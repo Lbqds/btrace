@@ -804,7 +804,6 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
             b.rewind();
         }
         return new String(buf, 0, i, StandardCharsets.UTF_8);
-        return "";
     }
 
     /**

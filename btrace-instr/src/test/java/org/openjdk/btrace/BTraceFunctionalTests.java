@@ -88,8 +88,6 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testOnTimer() throws Exception {
-        debugBTrace = true;
-        debugTestApp = true;
         test(
             "resources.Main",
             "btrace/OnTimerTest.java",
@@ -109,7 +107,6 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testOnTimerArg() throws Exception {
-        debugTestApp = true;
         test(
             "resources.Main",
             "btrace/OnTimerArgTest.java",
@@ -223,8 +220,6 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testOnMethodSubclass() throws Exception {
-        debugBTrace = true;
-        debugTestApp = true;
         test(
             "resources.Main",
             "btrace/OnMethodSubclassTest.java",
@@ -242,7 +237,6 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testProbeArgs() throws Exception {
-        debugTestApp = true;
         isUnsafe = true;
         test(
             "resources.Main",

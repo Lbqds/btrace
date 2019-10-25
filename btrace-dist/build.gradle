@@ -182,7 +182,10 @@ buildDeb {
     requires('openjdk-8-jdk')
 }
 
+buildTgz.dependsOn agentJar, bootJar, clientJar, fixPermissions
 buildZip.dependsOn agentJar, bootJar, clientJar, fixPermissions
+buildDeb.dependsOn agentJar, bootJar, clientJar, fixPermissions
+buildRpm.dependsOn agentJar, bootJar, clientJar, fixPermissions
 build.dependsOn buildZip, buildTgz, buildDeb, buildRpm
 
 test {

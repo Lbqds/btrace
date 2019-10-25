@@ -1,0 +1,58 @@
+import org.gradle.internal.os.OperatingSystem
+import org.gradle.internal.jvm.Jvm
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'java'
+}
+
+def nativeHeadersDir = "${buildDir}/build/generated/native/include"
+def dtraceLibDir = "${buildDir}/build/dtrace"
+def javaHome = Jvm.current().javaHome
+def isSolaris = OperatingSystem.current() == OperatingSystem.SOLARIS
+
+task nativeHeaders(type:Exec) {
+    def classpath = sourceSets.main.runtimeClasspath.asPath
+    commandLine "javah", "-d", nativeHeadersDir, "-classpath", classpath, "org.openjdk.btrace.core.BTraceRuntime"
+
+    dependsOn classes
+}
+
+if (isSolaris) {
+    task compileC(type: Exec) {
+        commandLine "gcc", "-c", "-I${javaHome}/include", "-I${javaHome}/include/solaris", "-I${nativeHeadersDir}", "-o", "${dtraceLibDir}/btrace.o", "${projectDir}/src/main/native/btrace.c"
+        dependsOn nativeHeaders
+    }
+
+    task dtrace(type: Exec) {
+        commandLine "/usr/sbin/dtrace", "-G", "-o", "${dtraceLibDir}/btraced.o", "-s", "${projectDir}/src/main/native/btraced.d", "${dtraceLibDir}/btrace.o"
+        dependsOn compileC
+    }
+
+    task linkDTraceLib(type: Exec) {
+        commandLine "gcc", "-G", "${dtraceLibDir}/btrace.o", "${dtraceLibDir}/btraced.o", "-o", "${buildDir}/${OS_ARCH}/libbtrace.so"
+        dependsOn dtrace
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs "src/main/java"
+            if (!isSolaris) {
+                srcDirs "src/mock/java"
+            }
+        }
+    }
+}
+
+shadowJar {
+    include 'org/openjdk/btrace/dtrace/**/*'
+    classifier = null
+}
+
+build.dependsOn shadowJar
+
+if (isSolaris) {
+    jar.dependsOn linkDTraceLib
+}

@@ -102,6 +102,12 @@ project(':btrace-agent') {
     }
 }
 
+project(':btrace-dtrace') {
+    dependencies {
+        compile project(':btrace-core')
+    }
+}
+
 project(':btrace-dist') {
     dependencies {
         compile project(':btrace-agent')

@@ -332,7 +332,6 @@ public final class BTraceRuntime {
             b.rewind();
         }
         return new String(buf, 0, i, StandardCharsets.UTF_8);
-        return "";
     }
 
     /**

@@ -102,7 +102,7 @@ public final class BTraceRuntime {
     // are we running with DTrace support enabled?
     private static boolean dtraceEnabled;
     private static boolean isNewerThan8 = false;
-    private static final BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
+    private static volatile BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
         @Override
         public BTraceRuntimeImpl getRt() {
             return null;

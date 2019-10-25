@@ -184,3 +184,9 @@ buildDeb {
 
 buildZip.dependsOn agentJar, bootJar, clientJar, fixPermissions
 build.dependsOn buildZip, buildTgz, buildDeb, buildRpm
+
+test {
+    doLast {
+        project(':btrace-instr').tasks.test.execute()
+    }
+}

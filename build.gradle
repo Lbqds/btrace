@@ -5,7 +5,8 @@ plugins {
 project.ext.asmVersion = 5.2
 
 def env = System.getenv()
-def javaHome = env['JAVA_HOME']
+def javaHome = "/Users/jaroslav.bachorik/.sdkman/candidates/java/8.0.222.hs-adpt"
+// env['JAVA_HOME']
 
 subprojects {
     apply from: rootProject.file('common.gradle')

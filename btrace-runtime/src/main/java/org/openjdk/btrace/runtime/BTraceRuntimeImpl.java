@@ -215,7 +215,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
     }
 
     // for testing purposes
-    private static final boolean uniqueClientClassNames = true;
+    private static volatile boolean uniqueClientClassNames = true;
 
     // BTraceRuntime against BTrace class name
     private static final Map<String, BTraceRuntimeImpl> runtimes = new ConcurrentHashMap<>();

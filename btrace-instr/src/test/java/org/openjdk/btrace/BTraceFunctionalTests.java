@@ -41,7 +41,7 @@ import org.junit.Test;
  */
 public class BTraceFunctionalTests extends RuntimeTest {
     @BeforeClass
-    public static void classSetup() {
+    public static void classSetup() throws Exception {
         setup();
     }
 
@@ -223,6 +223,8 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testOnMethodSubclass() throws Exception {
+        debugBTrace = true;
+        debugTestApp = true;
         test(
             "resources.Main",
             "btrace/OnMethodSubclassTest.java",

@@ -12,7 +12,6 @@ task compileTestProbes {
         def path = project(':btrace-instr').sourceSets.main.runtimeClasspath
 
         def loader = new URLClassLoader(path.collect { f -> f.toURL() } as URL[])
-        def rsrc = null //loader.findResource("META-INF/services/org.openjdk.btrace.compiler.PackGenerator")
         def compiler = loader.loadClass('org.openjdk.btrace.compiler.Compiler')
         def rtCp = sourceSets.main.runtimeClasspath.collect { it.absolutePath }.join(':')
 
@@ -29,6 +28,9 @@ task compileTestProbes {
 }
 
 test {
+    onlyIf {
+        new File("${projectDir}/../btrace-dist/build/resources/main/libs/btrace-client.jar").exists()
+    }
     dependsOn cleanTest
     inputs.files compileTestProbes.outputs
     //inputs.files buildDTrace.outputs

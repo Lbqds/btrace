@@ -7,7 +7,7 @@ project.ext.asmVersion = 5.2
 def env = System.getenv()
 
 // use gradle.properties to set JAVA_HOME=<your JDK location>
-def javaHome = JAVA_HOME ?: env['JAVA_HOME']
+def javaHome = findProperty('JAVA_HOME') ?: env['JAVA_HOME']
 
 subprojects {
     apply from: rootProject.file('common.gradle')

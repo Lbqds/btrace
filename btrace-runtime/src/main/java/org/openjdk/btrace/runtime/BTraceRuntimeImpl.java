@@ -552,7 +552,6 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
                 if (periodArg != null) {
                     period = BTraceRuntime.parseLong(args.template(periodArg), period);
                 }
-                debugPrint("*** th: " + th);
                 timer.schedule(timerTasks[index], period, period);
             }
         }
@@ -1168,10 +1167,6 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
             tasks[index] = new TimerTask() {
                 final Method mthd;
                 {
-                    debugPrint("*** clz: " + clazz);
-                    for (Method met : clazz.getDeclaredMethods()) {
-                        debugPrint("*** met: " + met);
-                    }
                     Method m = null;
                     try {
                         m = th.getMethod(clazz);

@@ -39,9 +39,7 @@ sourceSets {
     main {
         java {
             srcDirs "src/main/java"
-            if (!isSolaris) {
-                srcDirs "src/mock/java"
-            }
+            srcDirs "src/mock/java"
         }
     }
 }

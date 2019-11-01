@@ -18,8 +18,8 @@ make/netbeans/nbproject/private
 TEST-*
 make/junit*
 make/private.properties
-benchmark/target
-benchmark/build
+btrace-benchmark/target
+btrace-benchmark/build
 benchmark/*.iml
 junit*
 /btrace-statsd/target/

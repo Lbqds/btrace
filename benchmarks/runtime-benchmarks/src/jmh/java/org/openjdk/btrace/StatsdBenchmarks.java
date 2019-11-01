@@ -22,73 +22,56 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package net.java.btrace;
+package org.openjdk.btrace;
 
 import java.util.concurrent.TimeUnit;
+
+import org.openjdk.btrace.statsd.Statsd;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
-import org.openjdk.jmh.profile.ProfilerFactory;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+/**
+ * Basic benchmark for the performance of {@linkplain Statsd}
+ * @author Jaroslav Bachorik
+ */
 @State(Scope.Thread)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Fork(1)
 @BenchmarkMode(Mode.AverageTime)
-public class StringOpBenchmarks {
-    private static final String STRING_PART = "h";
-
-    StringBuilder sb;
-    String st;
-    String res;
+public class StatsdBenchmarks {
+    private Statsd c;
 
     @Setup
     public void setup() {
-        st = "";
+        c = Statsd.getInstance();
     }
 
-    @Setup(Level.Invocation)
-    public void setupEach() {
-        sb = new StringBuilder();
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 1200, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
     @Benchmark
-    public void testStringBuilder() {
-        sb.append(STRING_PART).append(STRING_PART);
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 1200, timeUnit = TimeUnit.MILLISECONDS)
-    @Benchmark
-    public void testStringPlus() {
-        res = st + STRING_PART + STRING_PART;
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 1200, timeUnit = TimeUnit.MILLISECONDS)
-    @Benchmark
-    public void testStrCat() {
-        res = st.concat(STRING_PART).concat(STRING_PART);
+    @Threads(1)
+    public void testGauge_1() {
+        c.gauge("g1", 10);
     }
 
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                    .addProfiler("gc")
-                    .include(".*" + StringOpBenchmarks.class.getSimpleName() + ".*test.*")
-                    .build();
+                .addProfiler("stack")
+                .include(".*" + StatsdBenchmarks.class.getSimpleName() + ".*test.*")
+                .build();
 
-            new Runner(opt).run();
+        new Runner(opt).run();
     }
 }

@@ -34,8 +34,8 @@ import java.util.List;
 /**
  * Profiler is a highly specialized aggregation-like data collector optimized
  * for high-speed collection of the application execution call tree data.
- * <br/><br/>
- * <note>It is exposable as MBean via {@linkplain Property} annotation</note>
+ * <br><br>
+ * <cite>It is exposable as MBean via {@linkplain Property} annotation</cite>
  *
  * @author Jaroslav Bachorik
  * @since 1.2
@@ -43,7 +43,7 @@ import java.util.List;
 public abstract class Profiler {
     /**
      * This property exposes the time of creating this particular {@linkplain Profiler} instance.
-     * <br/>
+     * <br>
      * The unit is milliseconds.
      */
     public final long START_TIME;
@@ -56,7 +56,7 @@ public abstract class Profiler {
     }
 
     /**
-     * Records the event of entering an execution unit (eg. method)<br/>
+     * Records the event of entering an execution unit (eg. method)<br>
      * Must be paired with a call to {@linkplain Profiler#recordExit(java.lang.String, long) }
      * with the same blockName, eventually
      *
@@ -65,7 +65,7 @@ public abstract class Profiler {
     public abstract void recordEntry(String blockName);
 
     /**
-     * Records the event of exiting an execution unit (eg. method)<br/>
+     * Records the event of exiting an execution unit (eg. method)<br>
      * Must be preceded by a call to {@linkplain Profiler#recordEntry(java.lang.String) }
      * with the same blockName
      *
@@ -84,7 +84,7 @@ public abstract class Profiler {
     }
 
     /**
-     * Creates an immutable snapshot of the collected profiling data.<br/>
+     * Creates an immutable snapshot of the collected profiling data.<br>
      * Makes it possible to reset the profiler after creating the snapshot, eventually
      *
      * @param reset Signals the profiler to perform reset right after getting the snapshot (in an atomic transaction)
@@ -191,7 +191,7 @@ public abstract class Profiler {
     /**
      * Snapshot is an immutable image of the current profiling data collected
      * by the {@linkplain Profiler}
-     * <br/><br/>
+     * <br><br>
      * It is created by calling {@linkplain Profiler#snapshot()} method
      *
      * @since 1.2

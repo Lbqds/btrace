@@ -1238,10 +1238,10 @@ public class BTraceUtils {
     }
 
     /**
-     * <p>Generates a string getTimestamp (current date&time)
+     * <p>Generates a string getTimestamp (current date&amp;time)
      *
      * @param format The format to be used - see {@linkplain SimpleDateFormat}
-     * @return Returns a string representing current date&time
+     * @return Returns a string representing current date&amp;time
      * @since 1.1
      */
     public static String timestamp(String format) {
@@ -1249,9 +1249,9 @@ public class BTraceUtils {
     }
 
     /**
-     * <p>Generates a string getTimestamp (current date&time) in the default system format
+     * <p>Generates a string getTimestamp (current date&amp;time) in the default system format
      *
-     * @return Returns a string representing current date&time
+     * @return Returns a string representing current date&amp;time
      * @since 1.1
      */
     public static String timestamp() {
@@ -1381,7 +1381,7 @@ public class BTraceUtils {
     // regular expression matching
 
     /**
-     * Compiles the given regular expression into a pattern.  </p>
+     * Compiles the given regular expression into a pattern.
      *
      * @param regex The expression to be compiled
      * @throws PatternSyntaxException If the expression's syntax is invalid
@@ -1401,7 +1401,7 @@ public class BTraceUtils {
 
     /**
      * Compiles the given regular expression into a pattern with the given
-     * flags.  </p>
+     * flags.
      *
      * @param regex The expression to be compiled
      * @param flags Match flags, a bit mask that may include
@@ -2752,7 +2752,7 @@ public class BTraceUtils {
     /**
      * Returns the maximum amount of memory that the Java virtual machine will
      * attempt to use.  If there is no inherent limit then the value {@link
-     * java.lang.Long#MAX_VALUE} will be returned. </p>
+     * java.lang.Long#MAX_VALUE} will be returned.
      *
      * @return the maximum amount of memory that the virtual machine will
      * attempt to use, measured in bytes
@@ -3007,7 +3007,7 @@ public class BTraceUtils {
     /**
      * Dump the snapshot of the Java heap to a file in hprof
      * binary format. Only the live objects are dumped.
-     * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+     * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
      * directory is created. Under that directory, a file of given
      * fileName is created.
      *
@@ -3020,7 +3020,7 @@ public class BTraceUtils {
     /**
      * Dump the snapshot of the Java heap to a file in hprof
      * binary format.
-     * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+     * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
      * directory is created. Under that directory, a file of given
      * fileName is created.
      *
@@ -3065,7 +3065,7 @@ public class BTraceUtils {
 
     /**
      * Serialize a given object into the given file.
-     * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+     * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
      * directory is created. Under that directory, a file of given
      * fileName is created.
      *
@@ -3087,7 +3087,7 @@ public class BTraceUtils {
     /**
      * Writes an XML document to persist the tree of the all the
      * transitively reachable objects from the given "root" object.
-     * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+     * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
      * directory is created. Under that directory, a file of the given
      * fileName is created.
      */
@@ -3099,7 +3099,7 @@ public class BTraceUtils {
      * Writes a .dot document to persist the tree of the all the
      * transitively reachable objects from the given "root" object.
      * .dot documents can be viewed by Graphviz application (www.graphviz.org)
-     * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+     * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
      * directory is created. Under that directory, a file of the given
      * fileName is created.
      *
@@ -3770,7 +3770,7 @@ public class BTraceUtils {
         // regular expression matching
 
         /**
-         * Compiles the given regular expression into a pattern.  </p>
+         * Compiles the given regular expression into a pattern.
          *
          * @param regex The expression to be compiled
          * @throws PatternSyntaxException If the expression's syntax is invalid
@@ -3790,7 +3790,7 @@ public class BTraceUtils {
 
         /**
          * Compiles the given regular expression into a pattern with the given
-         * flags.  </p>
+         * flags.
          *
          * @param regex The expression to be compiled
          * @param flags Match flags, a bit mask that may include
@@ -4628,10 +4628,10 @@ public class BTraceUtils {
         }
 
         /**
-         * <p>Generates a string timestamp (current date&time)
+         * <p>Generates a string timestamp (current date&amp;time)
          *
          * @param format The format to be used - see {@linkplain SimpleDateFormat}
-         * @return Returns a string representing current date&time
+         * @return Returns a string representing current date&amp;time
          * @since 1.1
          */
         public static String timestamp(String format) {
@@ -4639,9 +4639,9 @@ public class BTraceUtils {
         }
 
         /**
-         * <p>Generates a string timestamp (current date&time) in the default system format
+         * <p>Generates a string timestamp (current date&amp;time) in the default system format
          *
-         * @return Returns a string representing current date&time
+         * @return Returns a string representing current date&amp;time
          * @since 1.1
          */
         public static String timestamp() {
@@ -6213,7 +6213,7 @@ public class BTraceUtils {
     public static class Export {
         /**
          * Serialize a given object into the given file.
-         * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+         * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
          * directory is created. Under that directory, a file of given
          * fileName is created.
          *
@@ -6235,7 +6235,7 @@ public class BTraceUtils {
         /**
          * Writes an XML document to persist the tree of the all the
          * transitively reachable objects from the given "root" object.
-         * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+         * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
          * directory is created. Under that directory, a file of the given
          * fileName is created.
          */
@@ -6247,7 +6247,7 @@ public class BTraceUtils {
          * Writes a .dot document to persist the tree of the all the
          * transitively reachable objects from the given "root" object.
          * .dot documents can be viewed by Graphviz application (www.graphviz.org)
-         * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+         * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
          * directory is created. Under that directory, a file of the given
          * fileName is created.
          *
@@ -6447,7 +6447,7 @@ public class BTraceUtils {
             /**
              * Returns the maximum amount of memory that the Java virtual machine will
              * attempt to use.  If there is no inherent limit then the value {@link
-             * java.lang.Long#MAX_VALUE} will be returned. </p>
+             * java.lang.Long#MAX_VALUE} will be returned.
              *
              * @return the maximum amount of memory that the virtual machine will
              * attempt to use, measured in bytes
@@ -6515,7 +6515,7 @@ public class BTraceUtils {
             /**
              * Dump the snapshot of the Java heap to a file in hprof
              * binary format. Only the live objects are dumped.
-             * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+             * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
              * directory is created. Under that directory, a file of given
              * fileName is created.
              *
@@ -6528,7 +6528,7 @@ public class BTraceUtils {
             /**
              * Dump the snapshot of the Java heap to a file in hprof
              * binary format.
-             * Under the current dir of traced app, ./btrace&lt;pid>/&lt;btrace-class>/
+             * Under the current dir of traced app, ./btrace&lt;pid&gt;/btrace-class/
              * directory is created. Under that directory, a file of given
              * fileName is created.
              *

@@ -22,10 +22,11 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package net.java.btrace;
+package org.openjdk.btrace;
 
-import com.sun.btrace.profiling.MethodInvocationProfiler;
 import java.util.concurrent.TimeUnit;
+
+import org.openjdk.btrace.runtime.profiling.MethodInvocationProfiler;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;

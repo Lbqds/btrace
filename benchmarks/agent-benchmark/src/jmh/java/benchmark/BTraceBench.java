@@ -22,32 +22,26 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package net.java.btrace;
+package benchmark;
 
-import com.sun.btrace.BTraceRuntime;
-import com.sun.btrace.ArgsMap;
-import com.sun.btrace.CommandListener;
-import com.sun.btrace.comm.DataCommand;
-import com.sun.btrace.comm.OkayCommand;
-import com.sun.btrace.instr.MethodTracker;
-
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.openjdk.btrace.core.comm.CommandListener;
+import org.openjdk.btrace.instr.MethodTracker;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -114,7 +108,6 @@ public class BTraceBench {
     long sampleCounter;
     long durCounter;
 
-    BTraceRuntime br;
     LinkedBlockingQueue<String> l = new LinkedBlockingQueue<>();
     PrintWriter pw;
     CommandListener cl;
@@ -129,19 +122,6 @@ public class BTraceBench {
         sampleCounter = 0;
         durCounter = 0;
         counter = r.nextInt();
-        try {
-            FileOutputStream fos = new FileOutputStream("/tmp/test.dump");
-            pw = new PrintWriter(fos);
-            cl = (c) -> {
-                if (c instanceof DataCommand) {
-                    ((DataCommand) c).print(pw);
-                }
-            };
-        } catch (Exception e) {
-            cl = (c) -> {
-            };
-        }
-        br = new BTraceRuntime("BenchmarkClass", new ArgsMap(), cl, null, null);
     }
 
     @Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
@@ -229,44 +209,44 @@ public class BTraceBench {
         sampleCounter++;
     }
 
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
-    @Benchmark
-    public void testSendCommand() {
-        br.send(new OkayCommand());
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
-    @Threads(2)
-    @Benchmark
-    public void testSendCommandMulti2() {
-        br.send(new OkayCommand());
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
-    @Threads(4)
-    @Benchmark
-    public void testSendCommandMulti4() {
-        br.send(new OkayCommand());
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
-    @Threads(8)
-    @Benchmark
-    public void testSendCommandMulti8() {
-        br.send(new OkayCommand());
-    }
-
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
-    @Threads(16)
-    @Benchmark
-    public void testSendCommandMulti16() {
-        br.send(new OkayCommand());
-    }
+//    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
+//    @Benchmark
+//    public void testSendCommand() {
+//        br.send(new OkayCommand());
+//    }
+//
+//    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
+//    @Threads(2)
+//    @Benchmark
+//    public void testSendCommandMulti2() {
+//        br.send(new OkayCommand());
+//    }
+//
+//    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
+//    @Threads(4)
+//    @Benchmark
+//    public void testSendCommandMulti4() {
+//        br.send(new OkayCommand());
+//    }
+//
+//    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
+//    @Threads(8)
+//    @Benchmark
+//    public void testSendCommandMulti8() {
+//        br.send(new OkayCommand());
+//    }
+//
+//    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 5, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
+//    @Threads(16)
+//    @Benchmark
+//    public void testSendCommandMulti16() {
+//        br.send(new OkayCommand());
+//    }
 
     long sampleHit10Checks = 0;
     long sampleHit10Sampled = 0;
@@ -306,7 +286,6 @@ public class BTraceBench {
 
     @org.openjdk.jmh.annotations.TearDown
     public void teardown() {
-        System.err.println();
         if (sampleHit10Checks > 0) {
             System.err.println("=== testSampleHit10");
             System.err.println("#samples ~ " + sampleHit10Sampled);
@@ -335,27 +314,25 @@ public class BTraceBench {
     private static BTraceConfig getConfig() throws IOException {
         FileSystem fs = FileSystems.getDefault();
 
-        Path agentPath = null;
-        Path bootPath = null;
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
-        URL[] urls = ((URLClassLoader)cl).getURLs();
-        for (URL url: urls) {
-            final String path = url.getPath();
-            if (path.contains("btrace-agent")) {
-                agentPath = fs.getPath(path);
-            } else if (path.contains("btrace-boot")) {
-                bootPath = fs.getPath(path);
-            }
+        Path distLibs = null;
+        String basedir = System.getProperty("jmh.basedir");
+        Path root = null;
+        if (basedir == null) {
+            root = fs.getPath(".").toAbsolutePath();
+        } else {
+            root = Paths.get(basedir).getParent();
         }
-        if (agentPath == null) { throw new IllegalArgumentException("btrace-agent.jar not found"); }
-        if (bootPath == null) { throw new IllegalArgumentException("btrace-boot.jar not found"); }
+        distLibs = root.resolve("btrace-dist/build/resources/main/libs");
+
+        Path agentPath = distLibs.resolve("btrace-agent.jar");
+        Path bootPath = distLibs.resolve("btrace-boot.jar");
 
         Path tmpDir = Files.createTempDirectory("btrace-bench-");
 
         Path targetPath = Files.copy(agentPath, tmpDir.resolve("btrace-agent.jar"), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(bootPath, tmpDir.resolve("btrace-boot.jar"), StandardCopyOption.REPLACE_EXISTING);
 
-        URL traceLoc = BTraceBench.class.getResource("/scripts/TraceScript.class");
+        URL traceLoc = BTraceBench.class.getResource("/TraceScript.class");
         String trace = traceLoc.getPath();
 
         return new BTraceConfig(tmpDir, targetPath.toString(), trace);

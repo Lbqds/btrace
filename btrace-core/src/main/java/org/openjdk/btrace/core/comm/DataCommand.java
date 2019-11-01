@@ -28,7 +28,7 @@ package org.openjdk.btrace.core.comm;
 /**
  * Command that carries arbitrary "result/output" data.
  *
- * @author A> Sundararajan
+ * @author A. Sundararajan
  */
 public abstract class DataCommand extends Command implements PrintableCommand {
     protected String name;

@@ -32,8 +32,8 @@ package org.openjdk.btrace.core.annotations;
  */
 public @interface Level {
     /**
-     * The level check expression.
-     * <p>Allowed syntax is one of the following
+     * The level check expression.<br>
+     * Allowed syntax is one of the following
      * <ul>
      * <li>{@code @Level("NUMBER")} - the same as {@code @Level(">=NUMBER")}
      * <li>{@code @Level("=NUMBER")} - handler is enabled when instrumentation level
@@ -47,8 +47,7 @@ public @interface Level {
      * <li>{@code @Level("<=NUMBER")} - handler is enabled when instrumentation level
      *     is less than or equal to <b>NUMBER</b></li>
      * </ul>
-     * </p>
-     * <p>Where <b>NUMBER</b> is a non-negative integer number.
+     * <p>Where <b>NUMBER</b> is a non-negative integer number.</p>
      *
      * @return
      */

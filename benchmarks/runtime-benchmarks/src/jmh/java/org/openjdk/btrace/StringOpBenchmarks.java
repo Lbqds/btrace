@@ -22,62 +22,70 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package net.java.btrace;
+package org.openjdk.btrace;
 
-import com.sun.btrace.SharedSettings;
-import com.sun.btrace.org.objectweb.asm.ClassReader;
-import com.sun.btrace.org.objectweb.asm.Opcodes;
-import com.sun.btrace.org.objectweb.asm.tree.ClassNode;
-import com.sun.btrace.runtime.BTraceProbe;
-import com.sun.btrace.runtime.BTraceProbeFactory;
-import com.sun.btrace.runtime.BTraceProbeNode;
-import com.sun.btrace.runtime.BTraceProbePersisted;
-import java.io.*;
 import java.util.concurrent.TimeUnit;
-import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @State(Scope.Thread)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Fork(1)
 @BenchmarkMode(Mode.AverageTime)
-public class ProbeLoadingBenchmark {
-    private InputStream classStream;
-    private BTraceProbeFactory bpf;
+public class StringOpBenchmarks {
+    private static final String STRING_PART = "h";
 
-    @Setup(Level.Trial)
-    public void setup() throws Exception {
-        bpf = new BTraceProbeFactory(SharedSettings.GLOBAL);
+    StringBuilder sb;
+    String st;
+    String res;
+
+    @Setup
+    public void setup() {
+        st = "";
     }
 
     @Setup(Level.Invocation)
-    public void setupRun() throws Exception {
-        classStream = ProbeLoadingBenchmark.class.getResourceAsStream("/scripts/TraceScript.class");
-    }
-
-    @TearDown(Level.Invocation)
-    public void tearDownRun() throws Exception {
-        classStream.close();
+    public void setupEach() {
+        sb = new StringBuilder();
     }
 
     @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 2, timeUnit = TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 5, time = 1200, timeUnit = TimeUnit.MILLISECONDS)
     @Benchmark
-    public void testBTraceProbeNew(Blackhole bh) throws Exception {
-        BTraceProbe bp = bpf.createProbe(classStream);
-        if (bp == null) {
-            throw new NullPointerException();
-        }
-        bh.consume(bp);
+    public void testStringBuilder() {
+        sb.append(STRING_PART).append(STRING_PART);
+    }
+
+    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 5, time = 1200, timeUnit = TimeUnit.MILLISECONDS)
+    @Benchmark
+    public void testStringPlus() {
+        res = st + STRING_PART + STRING_PART;
+    }
+
+    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 5, time = 1200, timeUnit = TimeUnit.MILLISECONDS)
+    @Benchmark
+    public void testStrCat() {
+        res = st.concat(STRING_PART).concat(STRING_PART);
     }
 
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                    .addProfiler("stack")
-                    .include(".*" + ProbeLoadingBenchmark.class.getSimpleName() + ".*test.*")
+                    .addProfiler("gc")
+                    .include(".*" + StringOpBenchmarks.class.getSimpleName() + ".*test.*")
                     .build();
 
             new Runner(opt).run();

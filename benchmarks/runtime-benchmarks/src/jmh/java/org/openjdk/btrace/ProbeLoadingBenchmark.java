@@ -22,57 +22,60 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package net.java.btrace;
+package org.openjdk.btrace;
 
-import com.sun.btrace.profiling.MethodInvocationProfiler;
-import com.sun.btrace.services.impl.Statsd;
+import java.io.*;
 import java.util.concurrent.TimeUnit;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Threads;
-import org.openjdk.jmh.annotations.Warmup;
-import org.openjdk.jmh.profile.ProfilerFactory;
+
+import org.openjdk.btrace.core.SharedSettings;
+import org.openjdk.btrace.instr.BTraceProbe;
+import org.openjdk.btrace.instr.BTraceProbeFactory;
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-/**
- * Basic benchmark for the performance of {@linkplain MethodInvocationProfiler}
- * @author Jaroslav Bachorik
- */
 @State(Scope.Thread)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Fork(1)
 @BenchmarkMode(Mode.AverageTime)
-public class StatsdBenchmarks {
-    private Statsd c;
+public class ProbeLoadingBenchmark {
+    private InputStream classStream;
+    private BTraceProbeFactory bpf;
 
-    @Setup
-    public void setup() {
-        c = Statsd.getInstance();
+    @Setup(Level.Trial)
+    public void setup() throws Exception {
+        bpf = new BTraceProbeFactory(SharedSettings.GLOBAL);
     }
 
-    @Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+    @Setup(Level.Invocation)
+    public void setupRun() throws Exception {
+        classStream = ProbeLoadingBenchmark.class.getResourceAsStream("/scripts/TraceScript.class");
+    }
+
+    @TearDown(Level.Invocation)
+    public void tearDownRun() throws Exception {
+        classStream.close();
+    }
+
+    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Measurement(iterations = 5, time = 2, timeUnit = TimeUnit.MILLISECONDS)
     @Benchmark
-    @Threads(1)
-    public void testGauge_1() {
-        c.gauge("g1", 10);
+    public void testBTraceProbeNew(Blackhole bh) throws Exception {
+        BTraceProbe bp = bpf.createProbe(classStream);
+        if (bp == null) {
+            throw new NullPointerException();
+        }
+        bh.consume(bp);
     }
 
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                .addProfiler("stack")
-                .include(".*" + StatsdBenchmarks.class.getSimpleName() + ".*test.*")
-                .build();
+                    .addProfiler("stack")
+                    .include(".*" + ProbeLoadingBenchmark.class.getSimpleName() + ".*test.*")
+                    .build();
 
-        new Runner(opt).run();
+            new Runner(opt).run();
     }
 }

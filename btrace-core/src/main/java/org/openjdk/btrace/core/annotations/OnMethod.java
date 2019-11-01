@@ -122,7 +122,7 @@ public @interface OnMethod {
      *
      * @return The instrumentation level (default {@code @Level("0")})
      * @see Level
-     * @see BTraceUtils#getInstrumentationLevel()
+     * @see org.openjdk.btrace.core.BTraceUtils#getInstrumentationLevel()
      * @since 1.3.4
      */
     Level enableAt() default @Level;

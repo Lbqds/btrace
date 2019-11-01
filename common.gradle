@@ -27,7 +27,7 @@ String mavenArtifactId = name
 
 javadoc {
     options.addStringOption('Xdoclint:all,-missing', '-quiet')
-    failOnError false
+    failOnError true
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, description: 'Creates a jar from the source files.') {

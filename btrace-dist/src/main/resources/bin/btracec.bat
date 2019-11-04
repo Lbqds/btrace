@@ -13,7 +13,7 @@ if "%JAVA_HOME%" == "" goto noJavaHome
     %JAVA_HOME%\bin\java -cp %BTRACE_HOME%/build/btrace-client.jar org.openjdk.btrace.client.Main --version
     goto end
   )
-  "%JAVA_HOME%/bin/java" -cp "%BTRACE_HOME%/libs/btrace-client.jar;%JAVA_HOME%/lib/tools.jar" Compiler %*
+  "%JAVA_HOME%/bin/java" -cp "%BTRACE_HOME%/libs/btrace-client.jar;%JAVA_HOME%/lib/tools.jar" org.openjdk.btrace.compiler.Compiler %*
   goto end
 :noJavaHome
   echo Please set JAVA_HOME before running this script

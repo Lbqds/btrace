@@ -17,7 +17,7 @@ if [ -f "${BTRACE_HOME}/libs/btrace-client.jar" ] ; then
     if [ "${JAVA_HOME}" != "" ]; then
         if [ "$1" = "--version" ]
         then
-          ${JAVA_HOME}/bin/java -jar ${BTRACE_HOME}/libs/btrace-client.jar org.openjdk.btrace.client.Main --version
+          ${JAVA_HOME}/bin/java -cp ${BTRACE_HOME}/libs/btrace-client.jar org.openjdk.btrace.client.Main --version
           exit 0
         fi
         case "`uname`" in
@@ -33,7 +33,7 @@ if [ -f "${BTRACE_HOME}/libs/btrace-client.jar" ] ; then
           ;;
        esac
 
-        ${JAVA_HOME}/bin/java -cp ${BTRACE_HOME}/libs/btrace-client.jar:${TOOLS_JAR} Compiler $*
+        ${JAVA_HOME}/bin/java -cp ${BTRACE_HOME}/libs/btrace-client.jar:${TOOLS_JAR} org.openjdk.btrace.compiler.Compiler $*
     else
         echo "Please set JAVA_HOME before running this script"
         exit 1

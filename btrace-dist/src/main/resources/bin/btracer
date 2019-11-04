@@ -83,14 +83,11 @@ if [ "${JAVA_HOME}" != "" ]; then
           OPTIONS="stdout=true,$OPTIONS"
           ;;
         --version)
-          $JAVA_HOME/bin/java -jar ${BTRACE_HOME}/libs/btrace-client.jar org.openjdk.btrace.client.Main --version
+          $JAVA_HOME/bin/java -cp ${BTRACE_HOME}/libs/btrace-client.jar org.openjdk.btrace.client.Main --version
           exit 0
           ;;
-        -h)
-          usage
-          ;;
         *)
-          break
+          usage
           ;;
       esac
       shift

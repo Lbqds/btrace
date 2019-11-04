@@ -73,10 +73,9 @@ set inloop=1
     set OPTIONS="statsd=%2,%OPTIONS"
     goto next
   )
-  if "%1"=="-h" (
-    call :usage
-    goto end
-  )
+  call :usage
+  goto end
+
   set inloop=0
 
   :next

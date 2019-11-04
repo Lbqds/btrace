@@ -118,13 +118,6 @@ project(':btrace-dist') {
     }
 }
 
-//project(':benchmark') {
-//    dependencies {
-//        compile project(':btrace-agent')
-//        compile project(':btrace-client')
-//    }
-//}
-
 // Support for releasing to BinTray; see https://github.com/bintray/gradle-bintray-plugin
 // Add 'gradle.properties' file containing the following properties:
 // * bintray.user

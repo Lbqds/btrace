@@ -6,10 +6,11 @@ plugins {
     id 'java'
 }
 
-def nativeHeadersDir = "${buildDir}/build/generated/native/include"
-def dtraceLibDir = "${buildDir}/build/dtrace"
+def nativeHeadersDir = "${buildDir}/generated/native/include"
+def dtraceLibDir = "${buildDir}/dtrace"
 def javaHome = Jvm.current().javaHome
 def isSolaris = OperatingSystem.current() == OperatingSystem.SOLARIS
+def osArch = System.getProperty("os.arch")
 
 task nativeHeaders(type:Exec) {
     def classpath = sourceSets.main.runtimeClasspath.asPath
@@ -19,19 +20,22 @@ task nativeHeaders(type:Exec) {
 }
 
 if (isSolaris) {
+    task makedirs(type: Exec) {
+        commandLine "mkdir", "-p", "${dtraceLibDir}", "${dtraceLibDir}/libs/${osArch}"
+    }
     task compileC(type: Exec) {
-        commandLine "gcc", "-c", "-I${javaHome}/include", "-I${javaHome}/include/solaris", "-I${nativeHeadersDir}", "-o", "${dtraceLibDir}/btrace.o", "${projectDir}/src/main/native/btrace.c"
-        dependsOn nativeHeaders
+        commandLine "gcc", "-c", "-I${javaHome}/include", "-I${javaHome}/include/solaris", "-I${nativeHeadersDir}", "-o${dtraceLibDir}/btrace.o", "${projectDir}/src/main/native/btrace.c"
+        dependsOn nativeHeaders, makedirs
     }
 
     task dtrace(type: Exec) {
         commandLine "/usr/sbin/dtrace", "-G", "-o", "${dtraceLibDir}/btraced.o", "-s", "${projectDir}/src/main/native/btraced.d", "${dtraceLibDir}/btrace.o"
-        dependsOn compileC
+        dependsOn compileC, makedirs
     }
 
     task linkDTraceLib(type: Exec) {
-        commandLine "gcc", "-G", "${dtraceLibDir}/btrace.o", "${dtraceLibDir}/btraced.o", "-o", "${buildDir}/${OS_ARCH}/libbtrace.so"
-        dependsOn dtrace
+        commandLine "gcc", "-G", "${dtraceLibDir}/btrace.o", "${dtraceLibDir}/btraced.o", "-o", "${dtraceLibDir}/libs/${osArch}/libbtrace.so"
+        dependsOn dtrace, makedirs
     }
 }
 

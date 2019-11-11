@@ -130,6 +130,11 @@ task fixPermissions(type: Exec) {
     commandLine 'chmod', '500', "$project.buildDir/resources/main/bin/btracer"
 }
 
+task copyDtraceLib(type: Copy) {
+    from "${projectDir}/../btrace-dtrace/build/dtrace/libs"
+    into "${project.buildDir}/resources/main/libs/"
+}
+
 task buildZip(type: Zip) {
     from "$project.buildDir/resources/main"
     include "**/*"
@@ -182,10 +187,11 @@ buildDeb {
     requires('openjdk-8-jdk')
 }
 
-buildTgz.dependsOn agentJar, bootJar, clientJar, fixPermissions
-buildZip.dependsOn agentJar, bootJar, clientJar, fixPermissions
-buildDeb.dependsOn agentJar, bootJar, clientJar, fixPermissions
-buildRpm.dependsOn agentJar, bootJar, clientJar, fixPermissions
+copyDtraceLib.dependsOn project(':btrace-dtrace').build
+buildTgz.dependsOn agentJar, bootJar, clientJar, fixPermissions, copyDtraceLib
+buildZip.dependsOn agentJar, bootJar, clientJar, fixPermissions, copyDtraceLib
+buildDeb.dependsOn agentJar, bootJar, clientJar, fixPermissions, copyDtraceLib
+buildRpm.dependsOn agentJar, bootJar, clientJar, fixPermissions, copyDtraceLib
 build.dependsOn buildZip, buildTgz, buildDeb, buildRpm
 
 test {

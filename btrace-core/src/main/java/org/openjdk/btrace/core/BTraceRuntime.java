@@ -38,20 +38,15 @@ import org.openjdk.btrace.core.types.AnyType;
 import org.openjdk.btrace.core.types.BTraceCollection;
 import org.openjdk.btrace.core.types.BTraceDeque;
 import org.openjdk.btrace.core.types.BTraceMap;
-import sun.misc.Perf;
 import sun.misc.Unsafe;
-import sun.reflect.Reflection;
 import sun.security.action.GetPropertyAction;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.LockInfo;
-import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
@@ -60,18 +55,13 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -104,11 +94,6 @@ public final class BTraceRuntime {
             return null;
         }
     };
-    // jvmstat related stuff
-    // to read and write perf counters
-    private static volatile Perf perf;
-    // performance counters created by this client
-    private static final Map<String, ByteBuffer> counters = new HashMap<>();
     private static final String INDENT = "    ";
 
     static {
@@ -182,178 +167,10 @@ public final class BTraceRuntime {
     }
 
     /**
-     * Utility to create a new jvmstat perf counter. Called
-     * by preprocessed BTrace class to create perf counter
-     * for each @Export variable.
-     */
-    public static void newPerfCounter(String name, String desc, Object value) {
-        newPerfCounter(value, name, desc);
-    }
-
-    public static void newPerfCounter(Object value, String name, String desc) {
-        Perf perf = getPerf();
-        char tc = desc.charAt(0);
-        switch (tc) {
-            case 'C':
-            case 'Z':
-            case 'B':
-            case 'S':
-            case 'I':
-            case 'J':
-            case 'F':
-            case 'D': {
-                long initValue = (value != null) ? ((Number) value).longValue() : 0L;
-                ByteBuffer b = perf.createLong(name, V_Variable, V_None, initValue);
-                b.order(ByteOrder.nativeOrder());
-                counters.put(name, b);
-            }
-            break;
-
-            case '[':
-                break;
-            case 'L': {
-                if (desc.equals("Ljava/lang/String;")) {
-                    byte[] buf;
-                    if (value != null) {
-                        buf = getStringBytes((String) value);
-                    } else {
-                        buf = new byte[PERF_STRING_LIMIT];
-                        buf[0] = '\0';
-                    }
-                    ByteBuffer b = perf.createByteArray(name, V_Variable, V_String,
-                            buf, buf.length);
-                    counters.put(name, b);
-                }
-            }
-            break;
-        }
-    }
-
-    /**
-     * Return the value of integer perf. counter of given name.
-     */
-    public static int getPerfInt(String name) {
-        return (int) getPerfLong(name);
-    }
-
-    /**
-     * Write the value of integer perf. counter of given name.
-     */
-    public static void putPerfInt(int value, String name) {
-        long l = value;
-        putPerfLong(l, name);
-    }
-
-    /**
-     * Return the value of float perf. counter of given name.
-     */
-    public static float getPerfFloat(String name) {
-        int val = getPerfInt(name);
-        return Float.intBitsToFloat(val);
-    }
-
-    /**
-     * Write the value of float perf. counter of given name.
-     */
-    public static void putPerfFloat(float value, String name) {
-        int i = Float.floatToRawIntBits(value);
-        putPerfInt(i, name);
-    }
-
-    /**
-     * Return the value of long perf. counter of given name.
-     */
-    public static long getPerfLong(String name) {
-        ByteBuffer b = counters.get(name);
-        synchronized (b) {
-            long l = b.getLong();
-            b.rewind();
-            return l;
-        }
-    }
-
-    /**
-     * Write the value of float perf. counter of given name.
-     */
-    public static void putPerfLong(long value, String name) {
-        ByteBuffer b = counters.get(name);
-        synchronized (b) {
-            b.putLong(value);
-            b.rewind();
-        }
-    }
-
-    /**
-     * Return the value of double perf. counter of given name.
-     */
-    public static double getPerfDouble(String name) {
-        long val = getPerfLong(name);
-        return Double.longBitsToDouble(val);
-    }
-
-    /**
-     * write the value of double perf. counter of given name.
-     */
-    public static void putPerfDouble(double value, String name) {
-        long l = Double.doubleToRawLongBits(value);
-        putPerfLong(l, name);
-    }
-
-    /**
-     * Return the value of String perf. counter of given name.
-     */
-    public static String getPerfString(String name) {
-        ByteBuffer b = counters.get(name);
-        byte[] buf = new byte[b.limit()];
-        byte t = (byte) 0;
-        int i = 0;
-        synchronized (b) {
-            while ((t = b.get()) != '\0') {
-                buf[i++] = t;
-            }
-            b.rewind();
-        }
-        return new String(buf, 0, i, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Write the value of float perf. counter of given name.
-     */
-    public static void putPerfString(String value, String name) {
-        ByteBuffer b = counters.get(name);
-        byte[] v = getStringBytes(value);
-        synchronized (b) {
-            b.put(v);
-            b.rewind();
-        }
-    }
-
-    /**
      * Handles exception from BTrace probe actions.
      */
     public static void handleException(Throwable th) {
         getRt().handleException(th);
-    }
-
-    public static String safeStr(Object obj) {
-        if (obj == null) {
-            return "null";
-        } else if (obj instanceof String) {
-            return (String) obj;
-        } else if (obj.getClass().getClassLoader() == null) {
-            try {
-                String str = obj.toString();
-                return str;
-            } catch (NullPointerException e) {
-                // NPE can be thrown from inside the toString() method we have no control over
-                return "null";
-            } catch (Throwable e) {
-                e.printStackTrace();
-                return "error";
-            }
-        } else {
-            return identityStr(obj);
-        }
     }
 
     // package-private interface to BTraceUtils class.
@@ -1400,26 +1217,6 @@ public final class BTraceRuntime {
     // private methods below this point
     // raise DTrace USDT probe
     private static native int dtraceProbe0(String s1, String s2, int i1, int i2);
-
-    private static Perf getPerf() {
-        if (perf == null) {
-            synchronized (BTraceRuntime.class) {
-                if (perf == null) {
-                    perf = AccessController.doPrivileged(new Perf.GetPerfAction());
-                }
-            }
-        }
-        return perf;
-    }
-
-    private static byte[] getStringBytes(String value) {
-        byte[] v = null;
-        v = value.getBytes(StandardCharsets.UTF_8);
-        byte[] v1 = new byte[v.length + 1];
-        System.arraycopy(v, 0, v1, 0, v.length);
-        v1[v.length] = '\0';
-        return v1;
-    }
 
     public interface BTraceRuntimeImpl {
         void debugPrint(Throwable t);

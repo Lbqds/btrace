@@ -356,7 +356,7 @@ final class Preprocessor {
 
             if (initNode != null) {
                 // found the initialization place;
-                // just replace the FLD_STORE with the TLS init sequence
+                // just replace the FLD_STORE with the field init sequence
                 l.insert(initNode, initList);
                 l.remove(initNode);
                 return;
@@ -909,7 +909,7 @@ final class Preprocessor {
         for (AbstractInsnNode n = clinit.instructions.getFirst(); n != null; n = n.getNext()) {
             if (n.getType() == AbstractInsnNode.METHOD_INSN) {
                 MethodInsnNode min = (MethodInsnNode) n;
-                if (min.getOpcode() == Opcodes.INVOKESTATIC &&
+                if (min.getOpcode() == Opcodes.INVOKEVIRTUAL &&
                         min.owner.equals(Constants.BTRACERTIMPL_INTERNAL) &&
                         min.name.equals("start")) {
                     return min;

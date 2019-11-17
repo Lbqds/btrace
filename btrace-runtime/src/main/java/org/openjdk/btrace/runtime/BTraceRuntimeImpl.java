@@ -198,7 +198,7 @@ public final class BTraceRuntimeImpl implements BTraceRuntime.BTraceRuntimeImpl,
     private static final ThreadLocal<RTWrapper> rt;
 
     static {
-         rt = new ThreadLocal<RTWrapper>() {
+        rt = new ThreadLocal<RTWrapper>() {
             @Override
             protected RTWrapper initialValue() {
                 return new RTWrapper();

@@ -521,11 +521,14 @@ public class Client {
         // we didn't find -- make a guess! If this app is running on a JDK rather
         // than a JRE there will be a tools.jar in $JDK_HOME/lib directory.
         if (System.getProperty("os.name").startsWith("Mac")) {
-            String java_mac_home = javaHome.substring(0, javaHome.indexOf("/Home"));
-            return java_mac_home + "/Home/lib/tools.jar";
-        } else {
-            return javaHome + "/../lib/tools.jar";
+            int homeIndex = javaHome.indexOf("/Home");
+            if (homeIndex > -1) {
+                String java_mac_home = javaHome.substring(0, javaHome.indexOf("/Home"));
+                return java_mac_home + "/Home/lib/tools.jar";
+            }
         }
+        // tools.jar is not included in JRE
+        return javaHome + (javaHome.contains("/jre") ? "/.." : "") + "/lib/tools.jar";
     }
 
     private void send(Command cmd) throws IOException {

@@ -33,7 +33,7 @@ public final class Messages {
     private static final ResourceBundle messages;
 
     static {
-        messages = ResourceBundle.getBundle("org.openjdk.btrace.core.messages", Locale.getDefault());
+        messages = ResourceBundle.getBundle("org.openjdk.btrace.core.messages", Locale.getDefault(), ClassLoader.getSystemClassLoader());
     }
 
     private Messages() {

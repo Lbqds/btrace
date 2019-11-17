@@ -93,15 +93,11 @@ public final class BTraceRuntime {
     private static final int PERF_STRING_LIMIT = 256;
     // the number of stack frames taking a thread dump adds
     private static final int THRD_DUMP_FRAMES = 1;
-    private static final String HOTSPOT_BEAN_NAME =
-            "com.sun.management:type=HotSpotDiagnostic";
+
     // we need Unsafe to load BTrace class bytes as
     // bootstrap class
     private static volatile Unsafe unsafe = null;
     private static Properties dotWriterProps;
-    // are we running with DTrace support enabled?
-    private static boolean dtraceEnabled;
-    private static boolean isNewerThan8 = false;
     private static volatile BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
         @Override
         public BTraceRuntimeImpl getRt() {
@@ -113,23 +109,9 @@ public final class BTraceRuntime {
     private static volatile Perf perf;
     // performance counters created by this client
     private static final Map<String, ByteBuffer> counters = new HashMap<>();
-    // Few MBeans used to implement certain built-in functions
-    private static volatile HotSpotDiagnosticMXBean hotspotMBean;
-    private static volatile MemoryMXBean memoryMBean;
-    private static volatile RuntimeMXBean runtimeMBean;
-    private static volatile ThreadMXBean threadMBean;
-    private static volatile List<GarbageCollectorMXBean> gcBeanList;
-    private static volatile List<MemoryPoolMXBean> memPoolList;
-    private static volatile OperatingSystemMXBean operatingSystemMXBean;
     private static final String INDENT = "    ";
 
     static {
-        try {
-            Reflection.class.getMethod("getCallerClass");
-            isNewerThan8 = true;
-        } catch (NoSuchMethodException | SecurityException ex) {
-            // ignore
-        }
         LINE_SEPARATOR = System.getProperty("line.separator");
     }
 
@@ -1061,87 +1043,73 @@ public final class BTraceRuntime {
     }
 
     static MemoryUsage heapUsage() {
-        initMemoryMBean();
-        return memoryMBean.getHeapMemoryUsage();
+        return getRt().getMemoryMXBean().getHeapMemoryUsage();
     }
 
     static MemoryUsage nonHeapUsage() {
-        initMemoryMBean();
-        return memoryMBean.getNonHeapMemoryUsage();
+        return getRt().getMemoryMXBean().getNonHeapMemoryUsage();
     }
 
     static long finalizationCount() {
-        initMemoryMBean();
-        return memoryMBean.getObjectPendingFinalizationCount();
+        return getRt().getMemoryMXBean().getObjectPendingFinalizationCount();
     }
 
     static long vmStartTime() {
-        initRuntimeMBean();
-        return runtimeMBean.getStartTime();
+        return getRt().getRuntimeMXBean().getStartTime();
     }
 
     static long vmUptime() {
-        initRuntimeMBean();
-        return runtimeMBean.getUptime();
+        return getRt().getRuntimeMXBean().getUptime();
     }
 
     static List<String> getInputArguments() {
-        initRuntimeMBean();
-        return runtimeMBean.getInputArguments();
+        return getRt().getRuntimeMXBean().getInputArguments();
     }
 
     static String getVmVersion() {
-        initRuntimeMBean();
-        return runtimeMBean.getVmVersion();
+        return getRt().getRuntimeMXBean().getVmVersion();
     }
 
     static boolean isBootClassPathSupported() {
-        initRuntimeMBean();
-        return runtimeMBean.isBootClassPathSupported();
+        return getRt().getRuntimeMXBean().isBootClassPathSupported();
     }
 
     static String getBootClassPath() {
-        initRuntimeMBean();
-        return runtimeMBean.getBootClassPath();
+        return getRt().getRuntimeMXBean().getBootClassPath();
     }
 
     static long getThreadCount() {
-        initThreadMBean();
-        return threadMBean.getThreadCount();
+        return getRt().getThreadMXBean().getThreadCount();
     }
 
     static long getPeakThreadCount() {
-        initThreadMBean();
-        return threadMBean.getPeakThreadCount();
+        return getRt().getThreadMXBean().getPeakThreadCount();
     }
 
     static long getTotalStartedThreadCount() {
-        initThreadMBean();
-        return threadMBean.getTotalStartedThreadCount();
+        return getRt().getThreadMXBean().getTotalStartedThreadCount();
     }
 
     static long getDaemonThreadCount() {
-        initThreadMBean();
-        return threadMBean.getDaemonThreadCount();
+        return getRt().getThreadMXBean().getDaemonThreadCount();
     }
 
     static long getCurrentThreadCpuTime() {
-        initThreadMBean();
-        threadMBean.setThreadCpuTimeEnabled(true);
-        return threadMBean.getCurrentThreadCpuTime();
+        ThreadMXBean threadMXBean = getRt().getThreadMXBean();
+        threadMXBean.setThreadCpuTimeEnabled(true);
+        return threadMXBean.getCurrentThreadCpuTime();
     }
 
     static long getCurrentThreadUserTime() {
-        initThreadMBean();
-        threadMBean.setThreadCpuTimeEnabled(true);
-        return threadMBean.getCurrentThreadUserTime();
+        ThreadMXBean threadMXBean = getRt().getThreadMXBean();
+        threadMXBean.setThreadCpuTimeEnabled(true);
+        return threadMXBean.getCurrentThreadUserTime();
     }
 
     static void dumpHeap(String fileName, boolean live) {
-        initHotspotMBean();
         try {
             String name = getRt().resolveFileName(fileName);
-            hotspotMBean.dumpHeap(name, live);
+            getRt().getHotspotMBean().dumpHeap(name, live);
         } catch (RuntimeException re) {
             throw re;
         } catch (Exception exp) {
@@ -1150,9 +1118,8 @@ public final class BTraceRuntime {
     }
 
     static long getTotalGcTime() {
-        initGarbageCollectionBeans();
         long totalGcTime = 0;
-        for (GarbageCollectorMXBean gcBean : gcBeanList) {
+        for (GarbageCollectorMXBean gcBean : getRt().getGCMBeans()) {
             totalGcTime += gcBean.getCollectionTime();
         }
         return totalGcTime;
@@ -1162,6 +1129,7 @@ public final class BTraceRuntime {
         if (poolFormat == null) {
             poolFormat = "%1$s;%2$d;%3$d;%4$d;%5$d";
         }
+        List<MemoryPoolMXBean> memPoolList = getRt().getMemoryPoolMXBeans();
         Object[][] poolOutput = new Object[memPoolList.size()][5];
 
         StringBuilder membuffer = new StringBuilder();
@@ -1183,14 +1151,14 @@ public final class BTraceRuntime {
     }
 
     static double getSystemLoadAverage() {
-        initOperatingSystemBean();
-        return operatingSystemMXBean.getSystemLoadAverage();
+        return getRt().getOperatingSystemMXBean().getSystemLoadAverage();
     }
 
     static long getProcessCPUTime() {
-        initOperatingSystemBean();
-        if (operatingSystemMXBean instanceof com.sun.management.OperatingSystemMXBean) {
-            return ((com.sun.management.OperatingSystemMXBean) operatingSystemMXBean).getProcessCpuTime();
+        OperatingSystemMXBean mbean = getRt().getOperatingSystemMXBean();
+
+        if (mbean instanceof com.sun.management.OperatingSystemMXBean) {
+            return ((com.sun.management.OperatingSystemMXBean) mbean).getProcessCpuTime();
         }
 
         return -1;
@@ -1223,11 +1191,11 @@ public final class BTraceRuntime {
     }
 
     static void deadlocks(boolean stackTrace) {
-        initThreadMBean();
-        if (threadMBean.isSynchronizerUsageSupported()) {
-            long[] tids = threadMBean.findDeadlockedThreads();
+        ThreadMXBean mbean = getRt().getThreadMXBean();
+        if (mbean.isSynchronizerUsageSupported()) {
+            long[] tids = mbean.findDeadlockedThreads();
             if (tids != null && tids.length > 0) {
-                ThreadInfo[] infos = threadMBean.getThreadInfo(tids, true, true);
+                ThreadInfo[] infos = mbean.getThreadInfo(tids, true, true);
                 StringBuilder sb = new StringBuilder();
                 for (ThreadInfo ti : infos) {
                     sb.append("\"").append(ti.getThreadName()).append("\"" + " Id=").append(ti.getThreadId()).append(" in ").append(ti.getThreadState());
@@ -1278,7 +1246,7 @@ public final class BTraceRuntime {
     }
 
     static int dtraceProbe(String s1, String s2, int i1, int i2) {
-        if (dtraceEnabled) {
+        if (getRt().isDTraceEnabled()) {
             return dtraceProbe0(s1, s2, i1, i2);
         } else {
             return 0;
@@ -1433,161 +1401,6 @@ public final class BTraceRuntime {
     // raise DTrace USDT probe
     private static native int dtraceProbe0(String s1, String s2, int i1, int i2);
 
-    private static void initHotspotMBean() {
-        if (hotspotMBean == null) {
-            synchronized (BTraceRuntime.class) {
-                if (hotspotMBean == null) {
-                    hotspotMBean = getHotspotMBean();
-                }
-            }
-        }
-    }
-
-    private static HotSpotDiagnosticMXBean getHotspotMBean() {
-        try {
-            return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<HotSpotDiagnosticMXBean>() {
-                        @Override
-                        public HotSpotDiagnosticMXBean run() throws Exception {
-                            MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-                            Set<ObjectName> s = server.queryNames(new ObjectName(HOTSPOT_BEAN_NAME), null);
-                            Iterator<ObjectName> itr = s.iterator();
-                            if (itr.hasNext()) {
-                                ObjectName name = itr.next();
-                                HotSpotDiagnosticMXBean bean =
-                                        ManagementFactory.newPlatformMXBeanProxy(server,
-                                                name.toString(), HotSpotDiagnosticMXBean.class);
-                                return bean;
-                            } else {
-                                return null;
-                            }
-                        }
-                    });
-        } catch (Exception exp) {
-            throw new UnsupportedOperationException(exp);
-        }
-    }
-
-    public static void initMemoryMBean() {
-        if (memoryMBean == null) {
-            synchronized (BTraceRuntime.class) {
-                if (memoryMBean == null) {
-                    memoryMBean = getMemoryMBean();
-                }
-            }
-        }
-    }
-
-    private static MemoryMXBean getMemoryMBean() {
-        try {
-            return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<MemoryMXBean>() {
-                        @Override
-                        public MemoryMXBean run() throws Exception {
-                            return ManagementFactory.getMemoryMXBean();
-                        }
-                    });
-        } catch (Exception exp) {
-            throw new UnsupportedOperationException(exp);
-        }
-    }
-
-    private static void initRuntimeMBean() {
-        if (runtimeMBean == null) {
-            synchronized (BTraceRuntime.class) {
-                if (runtimeMBean == null) {
-                    runtimeMBean = getRuntimeMBean();
-                }
-            }
-        }
-    }
-
-    private static RuntimeMXBean getRuntimeMBean() {
-        try {
-            return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<RuntimeMXBean>() {
-                        @Override
-                        public RuntimeMXBean run() throws Exception {
-                            return ManagementFactory.getRuntimeMXBean();
-                        }
-                    });
-        } catch (Exception exp) {
-            throw new UnsupportedOperationException(exp);
-        }
-    }
-
-    private static void initThreadMBean() {
-        if (threadMBean == null) {
-            synchronized (BTraceRuntime.class) {
-                if (threadMBean == null) {
-                    threadMBean = getThreadMBean();
-                }
-            }
-        }
-    }
-
-    private static ThreadMXBean getThreadMBean() {
-        try {
-            return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<ThreadMXBean>() {
-                        @Override
-                        public ThreadMXBean run() throws Exception {
-                            return ManagementFactory.getThreadMXBean();
-                        }
-                    });
-        } catch (Exception exp) {
-            throw new UnsupportedOperationException(exp);
-        }
-    }
-
-    private static List<GarbageCollectorMXBean> getGarbageCollectionMBeans() {
-        try {
-            return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<List<GarbageCollectorMXBean>>() {
-                        @Override
-                        public List<GarbageCollectorMXBean> run() throws Exception {
-                            return ManagementFactory.getGarbageCollectorMXBeans();
-                        }
-                    });
-        } catch (Exception exp) {
-            throw new UnsupportedOperationException(exp);
-        }
-    }
-
-    private static void initGarbageCollectionBeans() {
-        if (gcBeanList == null) {
-            synchronized (BTraceRuntime.class) {
-                if (gcBeanList == null) {
-                    gcBeanList = getGarbageCollectionMBeans();
-                }
-            }
-        }
-    }
-
-    private static OperatingSystemMXBean getOperatingSystemMXBean() {
-        try {
-            return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<OperatingSystemMXBean>() {
-                        @Override
-                        public OperatingSystemMXBean run() throws Exception {
-                            return ManagementFactory.getOperatingSystemMXBean();
-                        }
-                    });
-        } catch (Exception exp) {
-            throw new UnsupportedOperationException(exp);
-        }
-    }
-
-    private static void initOperatingSystemBean() {
-        if (operatingSystemMXBean == null) {
-            synchronized (BTraceRuntime.class) {
-                if (operatingSystemMXBean == null) {
-                    operatingSystemMXBean = getOperatingSystemMXBean();
-                }
-            }
-        }
-    }
-
     private static Perf getPerf() {
         if (perf == null) {
             synchronized (BTraceRuntime.class) {
@@ -1660,6 +1473,16 @@ public final class BTraceRuntime {
         String perfString(String name);
 
         String resolveFileName(String name);
+
+        boolean isDTraceEnabled();
+
+        List<MemoryPoolMXBean> getMemoryPoolMXBeans();
+        HotSpotDiagnosticMXBean getHotspotMBean();
+        MemoryMXBean getMemoryMXBean();
+        RuntimeMXBean getRuntimeMXBean();
+        ThreadMXBean getThreadMXBean();
+        OperatingSystemMXBean getOperatingSystemMXBean();
+        List<GarbageCollectorMXBean> getGCMBeans();
     }
 
     public interface BTraceRuntimeAccessor {

@@ -11,6 +11,11 @@ targetCompatibility = '1.7'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
+compileJava {
+    options.fork = true
+    options.forkOptions.executable = "${project.property("JAVA_8_HOME")}/bin/javac"
+}
+
 repositories {
     mavenCentral();
     // You may define additional repositories, or even remove "mavenCentral()".
@@ -27,6 +32,7 @@ String mavenArtifactId = name
 
 javadoc {
     options.addStringOption('Xdoclint:all,-missing', '-quiet')
+    executable = "${JAVA_8_HOME}/bin/javadoc"
     failOnError true
 }
 

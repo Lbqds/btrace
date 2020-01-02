@@ -90,7 +90,7 @@ public final class BTraceRuntime {
     private static Properties dotWriterProps;
     private static volatile BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
         @Override
-        public BTraceRuntimeImpl getRt() {
+        public IBTraceRuntime getRt() {
             return null;
         }
     };
@@ -103,8 +103,8 @@ public final class BTraceRuntime {
     private BTraceRuntime() {
     }
 
-    private static BTraceRuntimeImpl getRt() {
-        BTraceRuntimeImpl rt = rtAccessor.getRt();
+    private static IBTraceRuntime getRt() {
+        IBTraceRuntime rt = rtAccessor.getRt();
         return rt;
     }
 
@@ -1218,7 +1218,7 @@ public final class BTraceRuntime {
     // raise DTrace USDT probe
     private static native int dtraceProbe0(String s1, String s2, int i1, int i2);
 
-    public interface BTraceRuntimeImpl {
+    public interface IBTraceRuntime {
         void debugPrint(Throwable t);
 
         void send(String msg);
@@ -1283,7 +1283,7 @@ public final class BTraceRuntime {
     }
 
     public interface BTraceRuntimeAccessor {
-        BTraceRuntimeImpl getRt();
+        IBTraceRuntime getRt();
     }
 
     private static final class BTraceAtomicInteger extends AtomicInteger {

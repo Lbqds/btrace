@@ -25,19 +25,20 @@
 
 package org.openjdk.btrace.runtime;
 
+import jdk.internal.reflect.CallerSensitive;
 import org.openjdk.btrace.core.ArgsMap;
 import org.openjdk.btrace.core.BTraceRuntime;
-import org.openjdk.btrace.core.DebugSupport;
-import org.openjdk.btrace.core.comm.CommandListener;
-import sun.misc.Perf;
-import sun.reflect.CallerSensitive;
-import sun.reflect.Reflection;
 
 import java.lang.instrument.Instrumentation;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
+import jdk.internal.reflect.Reflection;
+import jdk.internal.perf.Perf;
+import org.openjdk.btrace.core.DebugSupport;
+import org.openjdk.btrace.core.comm.CommandListener;
+import org.openjdk.btrace.services.api.RuntimeContext;
 
 /**
  * Helper class used by BTrace built-in functions and
@@ -93,7 +94,7 @@ public final class BTraceRuntimeImpl extends BTraceRuntimeBase {
     public static void init(PerfReader perfRead) {
         BTraceRuntime.initUnsafe();
 
-        Class caller = Reflection.getCallerClass(2);
+        Class caller = Reflection.getCallerClass();
         if (! caller.getName().equals("org.openjdk.btrace.agent.Client")) {
             throw new SecurityException("unsafe init");
         }
@@ -103,7 +104,7 @@ public final class BTraceRuntimeImpl extends BTraceRuntimeBase {
 
     @CallerSensitive
     public Class defineClass(byte[] code) {
-        Class caller = Reflection.getCallerClass(2);
+        Class caller = Reflection.getCallerClass();
         if (! caller.getName().startsWith("org.openjdk.btrace.")) {
             throw new SecurityException("unsafe defineClass");
         }
@@ -112,7 +113,7 @@ public final class BTraceRuntimeImpl extends BTraceRuntimeBase {
 
     @CallerSensitive
     public Class defineClass(byte[] code, boolean mustBeBootstrap) {
-        Class caller = Reflection.getCallerClass(2);
+        Class caller = Reflection.getCallerClass();
         if (! caller.getName().startsWith("org.openjdk.btrace.")) {
             throw new SecurityException("unsafe defineClass");
         }

@@ -6,6 +6,11 @@ buildscript {
     }
 }
 
+compileTestJava {
+    options.fork = true
+    options.forkOptions.executable = "${project.property("JAVA_8_HOME")}/bin/javac"
+}
+
 task compileTestProbes {
     dependsOn compileTestJava
     doLast {

@@ -1,14 +1,64 @@
-// Note: "common.gradle" in the root project contains additional initialization
-//   for this project. This initialization is applied in the "build.gradle"
-//   of the root project.
+sourceSets {
 
-// NetBeans will automatically add "run" and "debug" tasks relying on the
-// "mainClass" property. You may however define the property prior executing
-// tasks by passing a "-PmainClass=<QUALIFIED_CLASS_NAME>" argument.
-//
-// Note however, that you may define your own "run" and "debug" task if you
-// prefer. In this case NetBeans will not add these tasks but you may rely on
-// your own implementation.
-if (!hasProperty('mainClass')) {
-    ext.mainClass = ''
+    java9 {
+        java {
+            srcDirs = ['src/main/java9']
+        }
+    }
+    java11 {
+        java {
+            srcDirs = ['src/main/java11']
+        }
+    }
+}
+
+compileJava {
+    sourceCompatibility = 7
+    targetCompatibility = 7
+    options.fork = true
+    options.forkOptions.executable = "${project.property("JAVA_8_HOME")}/bin/javac"
+}
+
+compileJava9Java {
+    sourceCompatibility = 9
+    targetCompatibility = 9
+    options.fork = true
+    options.forkOptions.executable = "${project.property("JAVA_9_HOME")}/bin/javac"
+    options.compilerArgs.addAll(['--add-exports', 'java.base/jdk.internal.reflect=ALL-UNNAMED', '--add-exports', 'java.base/jdk.internal.perf=ALL-UNNAMED'])
+}
+
+compileJava11Java {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    options.fork = true
+    options.forkOptions.executable = "${project.property("JAVA_11_HOME")}/bin/javac"
+    options.compilerArgs.addAll(['--add-exports', 'java.base/jdk.internal.reflect=ALL-UNNAMED', '--add-exports', 'java.base/jdk.internal.perf=ALL-UNNAMED'])
+}
+
+dependencies {
+    java9Implementation files(sourceSets.main.output.classesDirs) {
+        builtBy compileJava
+    }
+    java11Implementation files(sourceSets.main.output.classesDirs) {
+        builtBy compileJava
+    }
+
+    java9Implementation project(':btrace-core')
+    java9Implementation project(':btrace-services')
+
+    java11Implementation project(':btrace-core')
+    java11Implementation project(':btrace-services')
+
+    compile project(':btrace-core')
+    compile project(':btrace-services')
+}
+
+jar {
+    into('META-INF/versions/9') {
+        from sourceSets.java9.output
+    }
+    into('META-INF/versions/11') {
+        from sourceSets.java11.output
+    }
+    manifest.attributes('Multi-Release': 'true')
 }

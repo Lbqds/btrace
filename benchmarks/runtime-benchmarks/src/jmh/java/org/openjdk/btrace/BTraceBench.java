@@ -28,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -115,7 +114,7 @@ public class BTraceBench {
     long sampleCounter;
     long durCounter;
 
-    BTraceRuntime.BTraceRuntimeImpl br;
+    BTraceRuntime.IBTraceRuntime br;
     LinkedBlockingQueue<String> l = new LinkedBlockingQueue<>();
     PrintWriter pw;
     CommandListener cl;

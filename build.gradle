@@ -50,13 +50,6 @@ project(':btrace-services') {
     }
 }
 
-project(':btrace-runtime') {
-    dependencies {
-        compile project(':btrace-core')
-        compile project(':btrace-services')
-    }
-}
-
 project(':btrace-statsd') {
     dependencies {
         compile project(':btrace-core')

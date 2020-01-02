@@ -415,7 +415,12 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
             if (debug.isDebug()) {
                 debug.debug("... preprocessed");
             }
-            mapOnProbes();
+            try {
+                Class.forName("javax.xml.bind.JAXBException");
+                mapOnProbes();
+            } catch (ClassNotFoundException e) {
+                debug.debug("XML bindings are missing. @OnProbe support is disabled.");
+            }
         } catch (VerifierException e) {
             verifierException = e;
         } finally {

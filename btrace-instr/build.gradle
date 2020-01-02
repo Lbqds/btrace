@@ -7,6 +7,8 @@ buildscript {
 }
 
 compileTestJava {
+    sourceCompatibility = 7
+    targetCompatibility = 7
     options.fork = true
     options.forkOptions.executable = "${project.property("JAVA_8_HOME")}/bin/javac"
 }

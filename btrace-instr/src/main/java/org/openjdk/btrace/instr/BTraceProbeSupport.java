@@ -24,6 +24,7 @@ package org.openjdk.btrace.instr;
 import org.openjdk.btrace.core.ArgsMap;
 import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.DebugSupport;
+import org.openjdk.btrace.runtime.BTraceRuntimeBase;
 import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
 
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public final class BTraceProbeSupport {
 
     void setClassName(String name) {
         origName = name;
-        String clientName = BTraceRuntimeImpl.getClientName(name);
+        String clientName = BTraceRuntimeBase.getClientName(name);
         className = clientName != null ? clientName : name;
         classRenamed = !className.equals(name);
     }

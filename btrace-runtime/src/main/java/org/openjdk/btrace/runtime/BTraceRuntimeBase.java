@@ -1051,7 +1051,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     private static BTraceRuntimeImpl getCurrent() {
         RTWrapper rtw = rt.get();
         BTraceRuntimeImpl current = rtw != null ? rtw.rt : null;
-        current = current != null ? current : (BTraceRuntimeImpl)dummy;
+        current = current != null ? current : dummy;
         assert current != null : "BTraceRuntime is null!";
         return current;
     }
@@ -1426,11 +1426,21 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void debugPrint0(String msg) {
-        getCurrent().debugPrint(msg);
+        BTraceRuntimeImpl rt = getCurrent();
+        if (rt != null) {
+            rt.debugPrint(msg);
+        } else {
+            DebugSupport.info(msg);
+        }
     }
 
     private static void debugPrint0(Throwable t) {
-        getCurrent().debugPrint(t);
+        BTraceRuntimeImpl rt = getCurrent();
+        if (rt != null) {
+            rt.debugPrint(t);
+        } else {
+            DebugSupport.warning(t);
+        }
     }
 
     protected void debugPrint(String msg) {

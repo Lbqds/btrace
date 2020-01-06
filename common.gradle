@@ -9,6 +9,16 @@ apply plugin: 'idea'
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
+if (project.property("JAVA_8_HOME") == null) {
+    project.setProperty("JAVA_8_HOME", System.getenv("JAVA_8_HOME"));
+}
+if (project.property("JAVA_9_HOME") == null) {
+    project.setProperty("JAVA_9_HOME", System.getenv("JAVA_9_HOME"));
+}
+if (project.property("JAVA_11_HOME") == null) {
+    project.setProperty("JAVA_11_HOME", System.getenv("JAVA_11_HOME"));
+}
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 compileJava {

@@ -1,6 +1,5 @@
 package org.openjdk.btrace.instr;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -44,7 +43,7 @@ final class ProbeUpgradeVisitor_1_2 extends ClassVisitor {
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
         if (desc.contains("BTraceRuntime")) {
-            desc = Constants.BTRACERTIMPL_DESC;
+            desc = Constants.BTRACERTACCESS_DESC;
         }
         return new FieldVisitor(ASM5, super.visitField(access, name, desc, signature, value)) {
             @Override
@@ -76,7 +75,7 @@ final class ProbeUpgradeVisitor_1_2 extends ClassVisitor {
             @Override
             public void visitFieldInsn(int opcode, String owner, String name, String desc) {
                 if (desc.equals("Lcom/sun/btrace/BTraceRuntime;")) {
-                    desc = Constants.BTRACERTIMPL_DESC;
+                    desc = Constants.BTRACERTACCESS_DESC;
                 }
                 super.visitFieldInsn(opcode, owner, name, desc);
             }
@@ -86,15 +85,15 @@ final class ProbeUpgradeVisitor_1_2 extends ClassVisitor {
                 if (owner.equals("com/sun/btrace/BTraceRuntime")) {
                     if (name.equals("enter")) {
                         if (desc.equals("(Lcom/sun/btrace/BTraceRuntime;)Z")) {
-                            visitMethodInsn(INVOKESTATIC, Constants.BTRACERTIMPL_INTERNAL, name, "(" + Constants.BTRACERTIMPL_DESC + ")Z", itf);
+                            visitMethodInsn(INVOKESTATIC, Constants.BTRACERTACCESSL_INTERNAL, name, "(" + Constants.BTRACERTACCESS_DESC + ")Z", itf);
                         } else {
-                            visitFieldInsn(GETSTATIC, cName, "runtime", Constants.BTRACERTIMPL_DESC);
-                            visitMethodInsn(INVOKEVIRTUAL, Constants.BTRACERTIMPL_INTERNAL, name, "()Z", itf);
+                            visitFieldInsn(GETSTATIC, cName, "runtime", Constants.BTRACERTACCESS_DESC);
+                            visitMethodInsn(INVOKEVIRTUAL, Constants.BTRACERTACCESSL_INTERNAL, name, "()Z", itf);
                         }
                     } else if (name.equals("forClass")) {
                         desc = desc.replace("com/sun/btrace/shared/", "org/openjdk/btrace/core/handlers/");
-                        desc = desc.replace(")Lcom/sun/btrace/BTraceRuntime;", ")" + Constants.BTRACERTIMPL_DESC);
-                        super.visitMethodInsn(opcode, Constants.BTRACERTIMPL_INTERNAL, name, desc, itf);
+                        desc = desc.replace(")Lcom/sun/btrace/BTraceRuntime;", ")" + Constants.BTRACERTACCESS_DESC);
+                        super.visitMethodInsn(opcode, Constants.BTRACERTACCESSL_INTERNAL, name, desc, itf);
                     } else {
                         super.visitMethodInsn(INVOKESTATIC, Constants.BTRACERT_INTERNAL, name, desc, itf);
                     }

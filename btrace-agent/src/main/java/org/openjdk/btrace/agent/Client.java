@@ -46,8 +46,8 @@ import org.openjdk.btrace.instr.ClassInfo;
 import org.openjdk.btrace.instr.InstrumentUtils;
 import org.openjdk.btrace.instr.Instrumentor;
 import org.openjdk.btrace.instr.templates.impl.MethodTrackingExpander;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
-import org.openjdk.btrace.runtime.PerfReader;
+import org.openjdk.btrace.runtime.BTraceRuntimeAccess;
+import org.openjdk.btrace.runtime.BTraceRuntimes;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import sun.reflect.annotation.AnnotationParser;
@@ -95,8 +95,6 @@ abstract class Client implements CommandListener {
         MethodTrackingExpander.class.getClassLoader();
         ClassCache.class.getClassLoader();
         ClassInfo.class.getClassLoader();
-
-        BTraceRuntimeImpl.init(createPerfReaderImpl());
     }
 
     protected final Instrumentation inst;
@@ -105,7 +103,7 @@ abstract class Client implements CommandListener {
     protected final ArgsMap argsMap;
     private final BTraceTransformer transformer;
     protected volatile PrintWriter out;
-    private volatile BTraceRuntimeImpl runtime;
+    private volatile BTraceRuntime.Impl runtime;
     private volatile String outputName;
     private byte[] btraceCode;
     private BTraceProbe probe;
@@ -125,20 +123,6 @@ abstract class Client implements CommandListener {
         debug = new DebugSupport(settings);
 
         setupWriter();
-    }
-
-    @SuppressWarnings("LiteralClassName")
-    private static PerfReader createPerfReaderImpl() {
-        // see if we can access any jvmstat class
-        try {
-            if (Client.class.getResource("sun/jvmstat/monitor/MonitoredHost.class") != null) {
-                return (PerfReader) Class.forName("org.openjdk.btrace.agent.PerfReaderImpl").getDeclaredConstructor().newInstance();
-            }
-        } catch (Exception exp) {
-            // can happen if jvmstat is not available
-        }
-        // no luck, create null implementation
-        return new NullPerfReaderImpl();
     }
 
     private static String pid() {
@@ -297,16 +281,17 @@ abstract class Client implements CommandListener {
         }
     }
 
-    protected final Class loadClass(InstrumentCommand instr) throws IOException {
+    protected final Class<?> loadClass(InstrumentCommand instr) throws IOException {
         return loadClass(instr, true);
     }
 
-    protected final Class loadClass(InstrumentCommand instr, boolean canLoadPack) throws IOException {
+    protected final Class<?> loadClass(InstrumentCommand instr, boolean canLoadPack) throws IOException {
         ArgsMap args = instr.getArguments();
         btraceCode = instr.getCode();
         try {
             probe = load(btraceCode, ArgsMap.merge(argsMap, args), canLoadPack);
             if (probe == null) {
+                debugPrint("Failed to load BTrace probe code");
                 return null;
             }
 
@@ -328,7 +313,7 @@ abstract class Client implements CommandListener {
         if (isDebug()) {
             debugPrint("creating BTraceRuntime instance for " + probe.getClassName());
         }
-        runtime = new BTraceRuntimeImpl(probe.getClassName(), args, this, debug, inst);
+        runtime = BTraceRuntimes.getRuntime(probe.getClassName(), args, this, debug, inst);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -346,7 +331,7 @@ abstract class Client implements CommandListener {
 
         boolean entered = false;
         try {
-            entered = BTraceRuntimeImpl.enter(runtime);
+            entered = BTraceRuntimeAccess.enter(runtime);
             return probe.register(runtime, transformer);
         } catch (Throwable th) {
             debugPrint(th);
@@ -404,7 +389,7 @@ abstract class Client implements CommandListener {
         debug.debug(th);
     }
 
-    final BTraceRuntimeImpl getRuntime() {
+    final BTraceRuntime.Impl getRuntime() {
         return runtime;
     }
 

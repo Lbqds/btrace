@@ -47,7 +47,6 @@ import org.openjdk.btrace.core.handlers.LowMemoryHandler;
 import org.openjdk.btrace.core.handlers.TimerHandler;
 import org.openjdk.btrace.runtime.profiling.MethodInvocationProfiler;
 import org.openjdk.btrace.services.api.RuntimeContext;
-import sun.misc.Unsafe;
 
 import javax.management.ListenerNotFoundException;
 import javax.management.MBeanServer;
@@ -85,7 +84,6 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -113,42 +111,101 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Joachim Skeie (GC MBean support, advanced Deque manipulation)
  * @author KLynch
  */
-public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime, RuntimeContext {
+public abstract class BTraceRuntimeImplBase implements BTraceRuntime.Impl, RuntimeContext {
     private static final String HOTSPOT_BEAN_NAME =
             "com.sun.management:type=HotSpotDiagnostic";
 
-    static final class RTWrapper {
-        private BTraceRuntimeImpl rt = null;
+    private static final int CMD_QUEUE_LIMIT_DEFAULT = 100;
+    private static int CMD_QUEUE_LIMIT;
 
-        boolean set(BTraceRuntimeImpl other) {
-            if (rt != null && other != null) {
-                return false;
-            }
-            rt = other;
-            return true;
-        }
+    /**
+     * Utility to create a new jvmstat perf counter. Called
+     * by preprocessed BTrace class to create perf counter
+     * for each @Export variable.
+     */
+    public abstract void newPerfCounter(Object value, String name, String desc);
 
-        void escape(Callable<Void> c) {
-            BTraceRuntimeImpl oldRuntime = rt;
-            rt = null;
-            try {
-                c.call();
-            } catch (Exception ignored) {
-            } finally {
-                if (oldRuntime != null) {
-                    rt = oldRuntime;
-                }
-            }
+    /**
+     * Return the value of integer perf. counter of given name.
+     */
+    public int getPerfInt(String name) {
+        return (int) getPerfLong(name);
+    }
+
+    /**
+     * Write the value of integer perf. counter of given name.
+     */
+    public void putPerfInt(int value, String name) {
+        long l = value;
+        putPerfLong(l, name);
+    }
+
+    /**
+     * Return the value of float perf. counter of given name.
+     */
+    public final float getPerfFloat(String name) {
+        int val = getPerfInt(name);
+        return Float.intBitsToFloat(val);
+    }
+
+    /**
+     * Write the value of float perf. counter of given name.
+     */
+    public final void putPerfFloat(float value, String name) {
+        int i = Float.floatToRawIntBits(value);
+        putPerfInt(i, name);
+    }
+
+    /**
+     * Return the value of long perf. counter of given name.
+     */
+    public final long getPerfLong(String name) {
+        ByteBuffer b = counters.get(name);
+        synchronized(b) {
+            long l = b.getLong();
+            b.rewind();
+            return l;
         }
     }
 
-    private static final class Accessor implements BTraceRuntime.BTraceRuntimeAccessor {
-        @Override
-        public BTraceRuntime.IBTraceRuntime getRt() {
-            BTraceRuntimeBase current = getCurrent();
-            return current != null ? current : dummy;
+    /**
+     * Write the value of float perf. counter of given name.
+     */
+    public void putPerfLong(long value, String name) {
+        ByteBuffer b = counters.get(name);
+        synchronized (b) {
+            b.putLong(value);
+            b.rewind();
         }
+    }
 
+    /**
+     * Return the value of String perf. counter of given name.
+     */
+    public final String getPerfString(String name) {ByteBuffer b = counters.get(name);
+        byte[] buf = new byte[b.limit()];
+        byte t = (byte)0;
+        int i = 0;
+        synchronized (b) {
+            while ((t = b.get()) != '\0') {
+                buf[i++] = t;
+            }
+            b.rewind();
+        }
+        return new String(buf, 0, i, StandardCharsets.UTF_8);
+
+    }
+
+    /**
+     * Write the value of float perf. counter of given name.
+     */
+    public final void putPerfString(String value, String name) {
+        ByteBuffer b = counters.get(name);
+        byte[] v = getStringBytes(value);
+        synchronized (b) {
+            b.put(v);
+            b.rewind();
+        }
     }
 
     private static final class ConsumerWrapper implements MessagePassingQueue.Consumer<Command> {
@@ -172,55 +229,11 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
             }
         }
     }
-    // to be registered by BTraceRuntimeImpl implementation class
-    // should be treated as virtually immutable
-    static volatile BTraceRuntimeImpl dummy = null;
-
-    // we need Unsafe to load BTrace class bytes as
-    // bootstrap class
-    private static final Unsafe unsafe;
 
     private static Properties dotWriterProps;
-
-    // are we running with DTrace support enabled?
-    private static boolean dtraceEnabled;
-
     private static final boolean messageTimestamp = false;
-
-    // the command FIFO queue related settings
-    private static final int CMD_QUEUE_LIMIT_DEFAULT = 100;
-
-    // the command FIFO queue upper limit
-    private static int CMD_QUEUE_LIMIT;
-    protected static final ThreadLocal<RTWrapper> rt;
-
-    static {
-        rt = new ThreadLocal<RTWrapper>() {
-            @Override
-            protected RTWrapper initialValue() {
-                return new RTWrapper();
-            }
-        };
-        registerBTraceRuntime();
-        unsafe = BTraceRuntime.initUnsafe();
-        setupCmdQueueParams();
-        // ignore
-    }
-
-    // for testing purposes
-    private static volatile boolean uniqueClientClassNames = true;
-
-    // BTraceRuntime against BTrace class name
-    protected static final Map<String, BTraceRuntimeImpl> runtimes = new ConcurrentHashMap<>();
-
-    // a set of all the client names connected so far
-    private static final Set<String> clients = new HashSet<>();
-
-    // jvmstat related stuff
-    // interface to read perf counters of this process
-    protected static volatile PerfReader perfReader;
-    // performance counters created by this client
-    protected static final Map<String, ByteBuffer> counters = new HashMap<>();
+    // are we running with DTrace support enabled?
+    private static volatile boolean dtraceEnabled;
 
     // Few MBeans used to implement certain built-in functions
     private static volatile MemoryMXBean memoryMBean;
@@ -392,7 +405,20 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         }
     };
 
-    BTraceRuntimeBase() {
+    // jvmstat related stuff
+    // interface to read perf counters of this process
+    protected static final PerfReader perfReader = createPerfReaderImpl();
+    // performance counters created by this client
+    protected static final Map<String, ByteBuffer> counters = new HashMap<>();
+
+    private static volatile BTraceRuntimeImplFactory<BTraceRuntime.Impl> factory = null;
+
+    static {
+        setupCmdQueueParams();
+        loadLibrary(perfReader.getClass().getClassLoader());
+    }
+
+    BTraceRuntimeImplBase() {
         debug = new DebugSupport(null);
         args = null;
         queue = null;
@@ -401,9 +427,9 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         instrumentation = null;
     }
 
-    BTraceRuntimeBase(final String className, ArgsMap args,
-                             final CommandListener cmdListener,
-                             DebugSupport ds, Instrumentation inst) {
+    BTraceRuntimeImplBase(final String className, ArgsMap args,
+                          final CommandListener cmdListener,
+                          DebugSupport ds, Instrumentation inst) {
         this.args = args;
         queue = new MpscChunkedArrayQueue<>(CMD_QUEUE_LIMIT_DEFAULT);
         specQueueManager = new SpeculativeQueueManager();
@@ -411,7 +437,8 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         instrumentation = inst;
         debug = ds != null ? ds : new DebugSupport(null);
 
-        addRuntime(className);
+        BTraceRuntimeAccess.addRuntime(className, this);
+
         cmdThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -422,7 +449,6 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
                             waitStrategy, exitCondition
                     );
                 } finally {
-                    runtimes.remove(className);
                     queue.clear();
                     specQueueManager.clear();
                     leave();
@@ -434,252 +460,61 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         cmdThread.start();
     }
 
-    protected abstract void addRuntime(String className);
-
     @Override
-    public int getInstrumentationLevel() {
-        BTraceRuntimeBase cur = getCurrent();
+    public void debugPrint(String msg) {
+        debug.debug(msg);
+    }
+
+    protected String getClassName() {
+        return className;
+    }
+
+    private static void setupCmdQueueParams() {
+        String maxQLen = System.getProperty(BTraceRuntime.CMD_QUEUE_LIMIT_KEY, null);
+        if (maxQLen == null) {
+            CMD_QUEUE_LIMIT = CMD_QUEUE_LIMIT_DEFAULT;
+            BTraceRuntimeAccess.debugPrint0("\"" + BTraceRuntime.CMD_QUEUE_LIMIT_KEY + "\" not provided. " +
+                    "Using the default cmd queue limit of " + CMD_QUEUE_LIMIT_DEFAULT);
+        } else {
+            try {
+                CMD_QUEUE_LIMIT = Integer.parseInt(maxQLen);
+                BTraceRuntimeAccess.debugPrint0("The cmd queue limit set to " + CMD_QUEUE_LIMIT);
+            } catch (NumberFormatException e) {
+                warning("\"" + maxQLen + "\" is not a valid int number. " +
+                        "Using the default cmd queue limit of " + CMD_QUEUE_LIMIT_DEFAULT);
+                CMD_QUEUE_LIMIT = CMD_QUEUE_LIMIT_DEFAULT;
+            }
+        }
+    }
+
+    void init(Class cl, TimerHandler[] tHandlers, EventHandler[] evHandlers, ErrorHandler[] errHandlers,
+                      ExitHandler[] eHandlers, LowMemoryHandler[] lmHandlers) {
+        debugPrint("init: clazz = " + clazz + ", cl = " + cl);
+        if (clazz != null) {
+            return;
+        }
+
+        clazz = cl;
+
+        debugPrint("init: timerHandlers = " + Arrays.deepToString(tHandlers));
+        timerHandlers = tHandlers;
+        eventHandlers = evHandlers;
+        errorHandlers = errHandlers;
+        exitHandlers = eHandlers;
+        lowMemoryHandlers = lmHandlers;
 
         try {
-            return cur.level.getInt(cur);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    @Override
-    public void setInstrumentationLevel(int level) {
-        BTraceRuntimeBase cur = getCurrent();
-        try {
-            cur.level.set(cur, level);
-        } catch (Exception e) {
-            // ignore
-        }
-    }
-
-    public static String getClientName(String forClassName) {
-        if (!uniqueClientClassNames) {
-            return forClassName;
+            level = cl.getDeclaredField("$btrace$$level");
+            level.setAccessible(true);
+            int levelVal = BTraceRuntime.parseInt(args.get("level"), Integer.MIN_VALUE);
+            if (levelVal > Integer.MIN_VALUE) {
+                level.set(null, levelVal);
+            }
+        } catch (Throwable e) {
+            debugPrint("Instrumentation level setting not available");
         }
 
-        String name = forClassName;
-        int suffix = 1;
-        while (clients.contains(name)) {
-            name = forClassName + "$" + (suffix++);
-        }
-        clients.add(name);
-        return name;
-    }
-
-//    The following methods are be implemented in Java version specific way in version specific classes
-//    ==================================================================================================
-//    @CallerSensitive
-//    public static void init(PerfReader perfRead) {
-//        BTraceRuntime.initUnsafe();
-//
-//        Class caller = isNewerThan8 ? Reflection.getCallerClass() : Reflection.getCallerClass(2);
-//        if (! caller.getName().equals("org.openjdk.btrace.agent.Client")) {
-//            throw new SecurityException("unsafe init");
-//        }
-//        perfReader = perfRead;
-//        loadLibrary(perfRead.getClass().getClassLoader());
-//    }
-//
-//    @CallerSensitive
-//    public Class defineClass(byte[] code) {
-//        Class caller = isNewerThan8 ? Reflection.getCallerClass() : Reflection.getCallerClass(2);
-//        if (! caller.getName().startsWith("org.openjdk.btrace.")) {
-//            throw new SecurityException("unsafe defineClass");
-//        }
-//        return defineClassImpl(code, true);
-//    }
-//
-//    @CallerSensitive
-//    public Class defineClass(byte[] code, boolean mustBeBootstrap) {
-//        Class caller = isNewerThan8 ? Reflection.getCallerClass() : Reflection.getCallerClass(2);
-//        if (! caller.getName().startsWith("org.openjdk.btrace.")) {
-//            throw new SecurityException("unsafe defineClass");
-//        }
-//        return defineClassImpl(code, mustBeBootstrap);
-//    }
-//    /**
-//     * Utility to create a new jvmstat perf counter. Called
-//     * by preprocessed BTrace class to create perf counter
-//     * for each @Export variable.
-//     */
-//    public static void newPerfCounter(String name, String desc, Object value) {
-//        newPerfCounter(value, name, desc);
-//    }
-//
-//    public static void newPerfCounter(Object value, String name, String desc) {
-//        BTPerf perf = getPerf();
-//        char tc = desc.charAt(0);
-//        switch (tc) {
-//            case 'C':
-//            case 'Z':
-//            case 'B':
-//            case 'S':
-//            case 'I':
-//            case 'J':
-//            case 'F':
-//            case 'D': {
-//                long initValue = (value != null)? ((Number)value).longValue() : 0L;
-//                ByteBuffer b = perf.createLong(name, V_Variable, V_None, initValue);
-//                b.order(ByteOrder.nativeOrder());
-//                counters.put(name, b);
-//            }
-//            break;
-//
-//            case '[':
-//                break;
-//            case 'L': {
-//                if (desc.equals("Ljava/lang/String;")) {
-//                    byte[] buf;
-//                    if (value != null) {
-//                        buf = getStringBytes((String)value);
-//                    } else {
-//                        buf = new byte[PERF_STRING_LIMIT];
-//                        buf[0] = '\0';
-//                    }
-//                    ByteBuffer b = perf.createByteArray(name, V_Variable, V_String,
-//                            buf, buf.length);
-//                    counters.put(name, b);
-//                }
-//            }
-//            break;
-//        }
-//    }
-//
-//    /**
-//     * Return the value of integer perf. counter of given name.
-//     */
-//    public static int getPerfInt(String name) {
-//        return (int) getPerfLong(name);
-//    }
-//
-//    /**
-//     * Write the value of integer perf. counter of given name.
-//     */
-//    public static void putPerfInt(int value, String name) {
-//        long l = value;
-//        putPerfLong(l, name);
-//    }
-//
-//    /**
-//     * Return the value of float perf. counter of given name.
-//     */
-//    public static float getPerfFloat(String name) {
-//        int val = getPerfInt(name);
-//        return Float.intBitsToFloat(val);
-//    }
-//
-//    /**
-//     * Write the value of float perf. counter of given name.
-//     */
-//    public static void putPerfFloat(float value, String name) {
-//        int i = Float.floatToRawIntBits(value);
-//        putPerfInt(i, name);
-//    }
-//
-//    /**
-//     * Return the value of long perf. counter of given name.
-//     */
-//    public static long getPerfLong(String name) {
-//        ByteBuffer b = counters.get(name);
-//        synchronized(b) {
-//            long l = b.getLong();
-//            b.rewind();
-//            return l;
-//        }
-//    }
-//
-//    /**
-//     * Write the value of float perf. counter of given name.
-//     */
-//    public static void putPerfLong(long value, String name) {
-//        ByteBuffer b = counters.get(name);
-//        synchronized (b) {
-//            b.putLong(value);
-//            b.rewind();
-//        }
-//    }
-//
-//    /**
-//     * Return the value of double perf. counter of given name.
-//     */
-//    public static double getPerfDouble(String name) {
-//        long val = getPerfLong(name);
-//        return Double.longBitsToDouble(val);
-//    }
-//
-//    /**
-//     * write the value of double perf. counter of given name.
-//     */
-//    public static void putPerfDouble(double value, String name) {
-//        long l = Double.doubleToRawLongBits(value);
-//        putPerfLong(l, name);
-//    }
-//
-//    /**
-//     * Return the value of String perf. counter of given name.
-//     */
-//    public static String getPerfString(String name) {
-//        ByteBuffer b = counters.get(name);
-//        byte[] buf = new byte[b.limit()];
-//        byte t = (byte)0;
-//        int i = 0;
-//        synchronized (b) {
-//            while ((t = b.get()) != '\0') {
-//                buf[i++] = t;
-//            }
-//            b.rewind();
-//        }
-//        return new String(buf, 0, i, StandardCharsets.UTF_8);
-//    }
-//
-//    /**
-//     * Write the value of float perf. counter of given name.
-//     */
-//    public static void putPerfString(String value, String name) {
-//        ByteBuffer b = counters.get(name);
-//        byte[] v = getStringBytes(value);
-//        synchronized (b) {
-//            b.put(v);
-//            b.rewind();
-//        }
-//    }
-//    private static Perf getPerf() {
-//        if (perf == null) {
-//            synchronized(BTraceRuntime.class) {
-//                if (perf == null) {
-//                    perf = AccessController.doPrivileged(new Perf.GetPerfAction());
-//                }
-//            }
-//        }
-//        return perf;
-//    }
-//    /**
-//     * Enter method is called by every probed method just
-//     * before the probe actions start.
-//     */
-//    public static boolean enter(BTraceRuntimeImpl current) {
-//        if (current.disabled) return false;
-//        return rt.get().set(current);
-//    }
-//    ==================================================================================================
-
-    public void shutdownCmdLine() {
-        exitting.set(true);
-    }
-
-    /**
-     * Leave method is called by every probed method just
-     * before the probe actions end (and actual probed
-     * method continues).
-     */
-    @Override
-    public void leave() {
-        rt.get().set(null);
+        BTraceMBean.registerMBean(clazz);
     }
 
     /**
@@ -725,15 +560,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         leave();
     }
 
-    public void handleExit(int exitCode) {
-        exitImpl(exitCode);
-        try {
-            cmdThread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
+    @Override
     public void handleEvent(EventCommand ecmd) {
         if (eventHandlers != null) {
             if (eventHandlerMap == null) {
@@ -750,7 +577,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
 
             final Method eventHandler = eventHandlerMap.get(event);
             if (eventHandler != null) {
-                rt.get().escape(new Callable<Void>() {
+                BTraceRuntimeAccess.doWithCurrent(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
                         eventHandler.invoke(null, (Object[])null);
@@ -761,165 +588,125 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         }
     }
 
-    /**
-     * One instance of BTraceRuntime is created per-client.
-     * This forClass method creates it. Class passed is the
-     * preprocessed BTrace program of the client.
-     */
-    public static BTraceRuntimeBase forClass(Class cl, TimerHandler[] tHandlers, EventHandler[] evHandlers, ErrorHandler[] errHandlers,
-                                             ExitHandler[] eHandlers, LowMemoryHandler[] lmHandlers) {
-        BTraceRuntimeBase runtime = runtimes.get(cl.getName());
-        runtime.init(cl, tHandlers, evHandlers, errHandlers, eHandlers, lmHandlers);
-        return runtime;
+    @Override
+    public int getInstrumentationLevel() {
+        BTraceRuntime.Impl cur = getCurrent();
+
+        try {
+            return cur.getLevel();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public void setInstrumentationLevel(int level) {
+        BTraceRuntime.Impl cur = getCurrent();
+        try {
+            cur.setLevel(level);
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    public void shutdownCmdLine() {
+        exitting.set(true);
     }
 
     /**
-     * Utility to create a new ThreadLocal object. Called
-     * by preprocessed BTrace class to create ThreadLocal
-     * for each @TLS variable.
-     * @param initValue Initial value.
-     *                  This value must be either a boxed primitive or {@linkplain Cloneable}.
-     *                  In case a {@linkplain Cloneable} value is provided the value is never used directly
-     *                  - instead, a new clone of the value is created per thread.
+     * Leave method is called by every probed method just
+     * before the probe actions end (and actual probed
+     * method continues).
      */
-    public static ThreadLocal newThreadLocal(final Object initValue) {
-        return new ThreadLocal() {
-            @Override
-            protected Object initialValue() {
-                if (initValue == null) return initValue;
-
-                if (initValue instanceof Cloneable) {
-                    try {
-                        Class clz = initValue.getClass();
-                        Method m = clz.getDeclaredMethod("clone");
-                        m.setAccessible(true);
-                        return m.invoke(initValue);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return null;
-                    }
-                }
-                return initValue;
-            }
-        };
+    @Override
+    public void leave() {
+        BTraceRuntimeAccess.leave();
     }
-
-    // The following constants are copied from VM code
-    // for jvmstat.
-
-    // perf counter variability - we always variable variability
-    private static final int V_Variable = 3;
-    // perf counter units
-    private static final int V_None = 1;
-    private static final int V_String = 5;
-    private static final int PERF_STRING_LIMIT = 256;
 
     /**
      * Handles exception from BTrace probe actions.
      */
     @Override
     public void handleException(Throwable th) {
-        BTraceRuntimeBase current = getCurrent();
-        if (current != null) {
-            current.handleExceptionImpl(th);
-        } else {
-            th.printStackTrace();
+        if (currentException.get() != null) {
+            return;
         }
-    }
+        boolean entered = BTraceRuntimeAccess.enter(this);
+        try {
+            currentException.set(th);
 
-    public static String safeStr(Object obj) {
-        if (obj == null) {
-            return "null";
-        } else if (obj instanceof String) {
-            return (String) obj;
-        } else if (obj.getClass().getClassLoader() == null) {
-            try {
-                String str = obj.toString();
-                return str;
-            } catch (NullPointerException e) {
-                // NPE can be thrown from inside the toString() method we have no control over
-                return "null";
-            } catch (Throwable e) {
-                e.printStackTrace();
-                return "error";
+            if (th instanceof ExitException) {
+                exitImpl(((ExitException)th).exitCode());
+            } else {
+                if (errorHandlers != null) {
+                    for (ErrorHandler eh : errorHandlers) {
+                        try {
+                            eh.getMethod(clazz).invoke(null, th);
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                } else {
+                    // Do not call send(Command). Exception messages should not
+                    // go to speculative buffers!
+                    enqueue(new ErrorCommand(th));
+                }
             }
-        } else {
-            return identityStr(obj);
+        } finally {
+            currentException.set(null);
+            if (entered) {
+                leave();
+            }
         }
     }
-
-    private static String identityStr(Object obj) {
-        int hashCode = System.identityHashCode(obj);
-        return obj.getClass().getName() + "@" + Integer.toHexString(hashCode);
-    }
-
     // package-private interface to BTraceUtils class.
 
     @Override
     public int speculation() {
-        BTraceRuntimeBase current = getCurrent();
-        return current.specQueueManager.speculation();
+        return specQueueManager.speculation();
     }
 
     @Override
     public void speculate(int id) {
-        BTraceRuntimeBase current = getCurrent();
-        current.specQueueManager.speculate(id);
+        specQueueManager.speculate(id);
     }
 
     @Override
     public void discard(int id) {
-        BTraceRuntimeBase current = getCurrent();
-        current.specQueueManager.discard(id);
+        specQueueManager.discard(id);
     }
 
     @Override
     public void commit(int id) {
-        BTraceRuntimeBase current = getCurrent();
-        current.specQueueManager.commit(id, current.queue);
-    }
-
-    public static void retransform(String runtimeName, Class<?> clazz) {
-        try {
-            BTraceRuntimeBase rt = runtimes.get(runtimeName);
-            if (rt != null && rt.instrumentation.isModifiableClass(clazz)) {
-                rt.instrumentation.retransformClasses(clazz);
-            }
-        } catch (Throwable e) {
-            warning(e);
-        }
+        specQueueManager.commit(id, queue);
     }
 
     @Override
     public long sizeof(Object obj) {
-        BTraceRuntimeBase runtime = getCurrent();
-        return runtime.instrumentation.getObjectSize(obj);
+        return instrumentation.getObjectSize(obj);
     }
 
     // BTrace command line argument functions
     @Override
     public int $length() {
-        BTraceRuntimeBase runtime = getCurrent();
-        return runtime.args == null? 0 : runtime.args.size();
+        return args == null? 0 : args.size();
     }
 
     @Override
     public String $(int n) {
-        BTraceRuntimeBase runtime = getCurrent();
-        if (runtime.args == null) {
+        if (args == null) {
             return null;
         } else {
-            return runtime.args.get(n);
+            return args.get(n);
         }
     }
 
     @Override
     public String $(String key) {
-        BTraceRuntimeBase runtime = getCurrent();
-        if (runtime.args == null) {
+        BTraceRuntime.Impl runtime = getCurrent();
+        if (args == null) {
             return null;
         } else {
-            return runtime.args.get(key);
+            return args.get(key);
         }
     }
 
@@ -1044,16 +831,112 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         return hotspotMBean;
     }
 
-    /**
-     * Get the current thread BTraceRuntime instance
-     * if there is one.
-     */
-    private static BTraceRuntimeImpl getCurrent() {
-        RTWrapper rtw = rt.get();
-        BTraceRuntimeImpl current = rtw != null ? rtw.rt : null;
-        current = current != null ? current : dummy;
-        assert current != null : "BTraceRuntime is null!";
-        return current;
+    @Override
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    @Override
+    public boolean enter() {
+        return BTraceRuntimeAccess.enter(this);
+    }
+
+    @Override
+    public void handleExit(int exitCode) {
+        exitImpl(exitCode);
+        try {
+            cmdThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @Override
+    public int getLevel() {
+        try {
+            return (int)level.get(null);
+        } catch (IllegalAccessException ignored) {}
+
+        return 0;
+    }
+
+    @Override
+    public void setLevel(int level) {
+        try {
+            this.level.set(null, level);
+        } catch (IllegalAccessException ignored) {}
+    }
+
+    protected static void loadLibrary(final ClassLoader cl) {
+        AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                loadBTraceLibrary(cl);
+                return null;
+            }
+        });
+    }
+
+    private static void loadBTraceLibrary(ClassLoader loader) {
+        boolean isSolaris = System.getProperty("os.name").equals("SunOS");
+        if (isSolaris) {
+            try {
+                System.loadLibrary("btrace");
+                dtraceEnabled = true;
+            } catch (LinkageError le) {
+                URL btracePkg = null;
+                if (loader != null) {
+                    btracePkg = loader.getResource("org/openjdk/btrace");
+                }
+
+                if (btracePkg == null) {
+                    warning("cannot load libbtrace.so, will miss DTrace probes from BTrace");
+                    return;
+                }
+
+                String path = btracePkg.toString();
+                int archSeparator = path.indexOf('!');
+                if (archSeparator != -1) {
+                    path = path.substring(0, archSeparator);
+                    path = path.substring("jar:".length(), path.lastIndexOf('/'));
+                } else {
+                    int buildSeparator = path.indexOf("/classes/");
+                    if (buildSeparator != -1) {
+                        path = path.substring(0, buildSeparator);
+                    }
+                }
+                String cpu = System.getProperty("os.arch");
+                if (cpu.equals("x86")) {
+                    cpu = "i386";
+                }
+                path += "/" + cpu + "/libbtrace.so";
+                try {
+                    path = new File(new URI(path)).getAbsolutePath();
+                } catch (RuntimeException re) {
+                    throw re;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    System.load(path);
+                    dtraceEnabled = true;
+                } catch (LinkageError le1) {
+                    warning("cannot load libbtrace.so, will miss DTrace probes from BTrace");
+                }
+            }
+        }
+    }
+
+    private static void warning(String msg) {
+        DebugSupport.warning(msg);
+    }
+
+    private static void warning(Throwable t) {
+        DebugSupport.warning(t);
+    }
+
+    private BTraceRuntime.Impl getCurrent() {
+        return BTraceRuntimeAccess.getCurrent();
     }
 
     private void initThreadPool() {
@@ -1129,16 +1012,9 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         };
     }
 
-    private static PerfReader getPerfReader() {
-        if (perfReader == null) {
-            throw new UnsupportedOperationException();
-        }
-        return perfReader;
-    }
-
     @Override
     public void send(String msg) {
-        send(new MessageCommand(messageTimestamp? System.nanoTime() : 0L,
+        send(new MessageCommand(messageTimestamp ? System.nanoTime() : 0L,
                 msg));
     }
 
@@ -1267,55 +1143,6 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         }
     }
 
-    protected static byte[] getStringBytes(String value) {
-        byte[] v = null;
-        v = value.getBytes(StandardCharsets.UTF_8);
-        byte[] v1 = new byte[v.length+1];
-        System.arraycopy(v, 0, v1, 0, v.length);
-        v1[v.length] = '\0';
-        return v1;
-    }
-
-    protected final Class defineClassImpl(byte[] code, boolean mustBeBootstrap) {
-        ClassLoader loader = null;
-        if (! mustBeBootstrap) {
-            loader = new ClassLoader(null) {};
-        }
-        Class cl = unsafe.defineClass(className, code, 0, code.length, loader, null);
-        unsafe.ensureClassInitialized(cl);
-        return cl;
-    }
-
-    private void init(Class cl, TimerHandler[] tHandlers, EventHandler[] evHandlers, ErrorHandler[] errHandlers,
-                      ExitHandler[] eHandlers, LowMemoryHandler[] lmHandlers) {
-        debugPrint("init: clazz = " + clazz + ", cl = " + cl);
-        if (clazz != null) {
-            return;
-        }
-
-        clazz = cl;
-
-        debugPrint("init: timerHandlers = " + Arrays.deepToString(tHandlers));
-        timerHandlers = tHandlers;
-        eventHandlers = evHandlers;
-        errorHandlers = errHandlers;
-        exitHandlers = eHandlers;
-        lowMemoryHandlers = lmHandlers;
-
-        try {
-            level = cl.getDeclaredField("$btrace$$level");
-            level.setAccessible(true);
-            int levelVal = BTraceRuntime.parseInt(args.get("level"), Integer.MIN_VALUE);
-            if (levelVal > Integer.MIN_VALUE) {
-                level.set(null, levelVal);
-            }
-        } catch (Throwable e) {
-            debugPrint("Instrumentation level setting not available");
-        }
-
-        BTraceMBean.registerMBean(clazz);
-    }
-
     @Override
     public String resolveFileName(String name) {
         if (name.indexOf(File.separatorChar) != -1) {
@@ -1324,127 +1151,16 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         StringBuilder buf = new StringBuilder();
         buf.append('.');
         buf.append(File.separatorChar);
-        BTraceRuntimeBase runtime = getCurrent();
         buf.append("btrace");
-        if (runtime.args != null && runtime.args.size() > 0) {
-            buf.append(runtime.args.get(0));
+        if (args != null && args.size() > 0) {
+            buf.append(args.get(0));
         }
         buf.append(File.separatorChar);
-        buf.append(runtime.className);
+        buf.append(className);
         new File(buf.toString()).mkdirs();
         buf.append(File.separatorChar);
         buf.append(name);
         return buf.toString();
-    }
-
-    protected static void loadLibrary(final ClassLoader cl) {
-        AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                loadBTraceLibrary(cl);
-                return null;
-            }
-        });
-    }
-
-    private static void loadBTraceLibrary(ClassLoader loader) {
-        boolean isSolaris = System.getProperty("os.name").equals("SunOS");
-        if (isSolaris) {
-            try {
-                System.loadLibrary("btrace");
-                dtraceEnabled = true;
-            } catch (LinkageError le) {
-                URL btracePkg = null;
-                if (loader != null) {
-                    btracePkg = loader.getResource("org/openjdk/btrace");
-                }
-
-                if (btracePkg == null) {
-                    warning("cannot load libbtrace.so, will miss DTrace probes from BTrace");
-                    return;
-                }
-
-                String path = btracePkg.toString();
-                int archSeparator = path.indexOf('!');
-                if (archSeparator != -1) {
-                    path = path.substring(0, archSeparator);
-                    path = path.substring("jar:".length(), path.lastIndexOf('/'));
-                } else {
-                    int buildSeparator = path.indexOf("/classes/");
-                    if (buildSeparator != -1) {
-                        path = path.substring(0, buildSeparator);
-                    }
-                }
-                String cpu = System.getProperty("os.arch");
-                if (cpu.equals("x86")) {
-                    cpu = "i386";
-                }
-                path += "/" + cpu + "/libbtrace.so";
-                try {
-                    path = new File(new URI(path)).getAbsolutePath();
-                } catch (RuntimeException re) {
-                    throw re;
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    System.load(path);
-                    dtraceEnabled = true;
-                } catch (LinkageError le1) {
-                    warning("cannot load libbtrace.so, will miss DTrace probes from BTrace");
-                }
-            }
-        }
-    }
-
-    private static void setupCmdQueueParams() {
-        String maxQLen = System.getProperty(BTraceRuntime.CMD_QUEUE_LIMIT_KEY, null);
-        if (maxQLen == null) {
-            CMD_QUEUE_LIMIT = CMD_QUEUE_LIMIT_DEFAULT;
-            debugPrint0("\"" + BTraceRuntime.CMD_QUEUE_LIMIT_KEY + "\" not provided. " +
-                    "Using the default cmd queue limit of " + CMD_QUEUE_LIMIT_DEFAULT);
-        } else {
-            try {
-                CMD_QUEUE_LIMIT = Integer.parseInt(maxQLen);
-                debugPrint0("The cmd queue limit set to " + CMD_QUEUE_LIMIT);
-            } catch (NumberFormatException e) {
-                warning("\"" + maxQLen + "\" is not a valid int number. " +
-                        "Using the default cmd queue limit of " + CMD_QUEUE_LIMIT_DEFAULT);
-                CMD_QUEUE_LIMIT = CMD_QUEUE_LIMIT_DEFAULT;
-            }
-        }
-    }
-
-    public static void registerBTraceRuntime() {
-        try {
-            Field fld = BTraceRuntime.class.getDeclaredField("rtAccessor");
-            fld.setAccessible(true);
-            fld.set(null, new Accessor());
-        } catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | SecurityException e) {
-            DebugSupport.warning(e);
-        }
-    }
-
-    private static void debugPrint0(String msg) {
-        BTraceRuntimeImpl rt = getCurrent();
-        if (rt != null) {
-            rt.debugPrint(msg);
-        } else {
-            DebugSupport.info(msg);
-        }
-    }
-
-    private static void debugPrint0(Throwable t) {
-        BTraceRuntimeImpl rt = getCurrent();
-        if (rt != null) {
-            rt.debugPrint(t);
-        } else {
-            DebugSupport.warning(t);
-        }
-    }
-
-    protected void debugPrint(String msg) {
-        debug.debug(msg);
     }
 
     @Override
@@ -1452,16 +1168,8 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
         debug.debug(t);
     }
 
-    private static void warning(String msg) {
-        DebugSupport.warning(msg);
-    }
-
-    private static void warning(Throwable t) {
-        DebugSupport.warning(t);
-    }
-
     private static void initMemoryPoolList() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (memPoolList == null) {
                 try {
                     memPoolList = AccessController.doPrivileged(
@@ -1479,7 +1187,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void initMemoryMBean() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (memoryMBean == null) {
                 try {
                     memoryMBean = AccessController.doPrivileged(
@@ -1497,7 +1205,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void initOperatingSystemMBean() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (operatingSystemMXBean == null) {
                 try {
                     operatingSystemMXBean = AccessController.doPrivileged(
@@ -1516,7 +1224,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void initRuntimeMBean() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (runtimeMBean == null) {
                 try {
                     runtimeMBean = AccessController.doPrivileged(new PrivilegedExceptionAction<RuntimeMXBean>() {
@@ -1533,7 +1241,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void initThreadMBean() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (threadMBean == null) {
                 try {
                     threadMBean = AccessController.doPrivileged(new PrivilegedExceptionAction<ThreadMXBean>() {
@@ -1550,7 +1258,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void initGcMBeans() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (gcBeanList == null) {
                 try {
                     gcBeanList = AccessController.doPrivileged(new PrivilegedExceptionAction<List<GarbageCollectorMXBean>>() {
@@ -1567,7 +1275,7 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     }
 
     private static void initHotspotMBean() {
-        synchronized (BTraceRuntimeBase.class) {
+        synchronized (BTraceRuntimeImplBase.class) {
             if (hotspotMBean == null) {
                 try {
                     hotspotMBean = AccessController.doPrivileged(new PrivilegedExceptionAction<HotSpotDiagnosticMXBean>() {
@@ -1607,5 +1315,35 @@ public abstract class BTraceRuntimeBase implements BTraceRuntime.IBTraceRuntime,
     @Override
     public MemoryMXBean getMemoryMXBean() {
         return memoryMBean;
+    }
+
+    protected static PerfReader getPerfReader() {
+        if (perfReader == null) {
+            throw new UnsupportedOperationException();
+        }
+        return perfReader;
+    }
+
+    protected static byte[] getStringBytes(String value) {
+        byte[] v = null;
+        v = value.getBytes(StandardCharsets.UTF_8);
+        byte[] v1 = new byte[v.length+1];
+        System.arraycopy(v, 0, v1, 0, v.length);
+        v1[v.length] = '\0';
+        return v1;
+    }
+
+    @SuppressWarnings("LiteralClassName")
+    private static PerfReader createPerfReaderImpl() {
+        // see if we can access any jvmstat class
+        try {
+            if (String.class.getResource("sun/jvmstat/monitor/MonitoredHost.class") != null) {
+                return (PerfReader) Class.forName("org.openjdk.btrace.agent.PerfReaderImpl").getDeclaredConstructor().newInstance();
+            }
+        } catch (Exception exp) {
+            // can happen if jvmstat is not available
+        }
+        // no luck, create null implementation
+        return new NullPerfReaderImpl();
     }
 }

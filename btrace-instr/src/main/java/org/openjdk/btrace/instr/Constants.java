@@ -65,8 +65,8 @@ public abstract class Constants {
     public static final String CONSTRUCTOR = "<init>";
     public static final String CLASS_INITIALIZER = "<clinit>";
 
-    public static final Type NULL_TYPE = Type.getType("$$null");
-    public static final Type TOP_TYPE = Type.getType("$$top");
+    public static final Type NULL_TYPE = Type.getType("L$$null");
+    public static final Type TOP_TYPE = Type.getType("L$$top");
 
     public static final Type VOIDREF_TYPE = Type.getType("Ljava/lang/Void;");
 
@@ -97,10 +97,14 @@ public abstract class Constants {
     public static final String THROWABLE_DESC = "L" + THROWABLE_INTERNAL + ";";
     public static final Type THROWABLE_TYPE = Type.getType(THROWABLE_DESC);
 
-    public static final String BTRACERTIMPL_INTERNAL = "org/openjdk/btrace/runtime/BTraceRuntimeImpl";
-    public static final String BTRACERTIMPL_DESC = "L" + BTRACERTIMPL_INTERNAL + ";";
+    public static final String BTRACERTACCESSL_INTERNAL = "org/openjdk/btrace/runtime/BTraceRuntimeAccess";
+    public static final String BTRACERTACCESS_DESC = "L" + BTRACERTACCESSL_INTERNAL + ";";
     public static final String BTRACERT_INTERNAL = "org/openjdk/btrace/core/BTraceRuntime";
     public static final String BTRACERT_DESC = "L" + BTRACERT_INTERNAL + ";";
+    public static final String BTRACERTIMPL_INTERNAL = "org/openjdk/btrace/core/BTraceRuntime$Impl";
+    public static final String BTRACERTIMPL_DESC = "L" + BTRACERTIMPL_INTERNAL + ";";
+    public static final String BTRACERTBASE_INTERNAL = "org/openjdk/btrace/runtime/BTraceRuntimeImplBase";
+    public static final String BTRACERTBASE_DESC = "L" + BTRACERTBASE_INTERNAL + ";";
     public static final Type BTRACERT_TYPE = Type.getType(BTRACERT_DESC);
 
     public static final String THREAD_LOCAL_INTERNAL = "java/lang/ThreadLocal";

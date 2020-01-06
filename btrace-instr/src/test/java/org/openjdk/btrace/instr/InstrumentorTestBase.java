@@ -28,7 +28,9 @@ package org.openjdk.btrace.instr;
 import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.MethodID;
 import org.openjdk.btrace.core.SharedSettings;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
+import org.openjdk.btrace.runtime.BTraceRuntimeAccess;
+import org.openjdk.btrace.runtime.BTraceRuntimeImplBase;
+import org.openjdk.btrace.runtime.BTraceRuntimeImpl_7;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -84,7 +86,7 @@ public abstract class InstrumentorTestBase {
     @BeforeClass
     public static void classStartup() throws Exception {
         BTraceRuntime.class.getName();
-        uccn = BTraceRuntimeImpl.class.getDeclaredField("uniqueClientClassNames");
+        uccn = BTraceRuntimeAccess.class.getDeclaredField("uniqueClientClassNames");
         uccn.setAccessible(true);
         uccn.set(null, true);
         settings.setTrusted(true);

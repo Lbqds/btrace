@@ -61,7 +61,7 @@ class RemoteClient extends Client {
             switch (cmd.getType()) {
                 case Command.INSTRUMENT: {
                     debugPrint("got instrument command");
-                    Class btraceClazz = loadClass((InstrumentCommand) cmd);
+                    Class<?> btraceClazz = loadClass((InstrumentCommand) cmd);
                     if (btraceClazz == null) {
                         throw new RuntimeException("can not load BTrace class");
                     }

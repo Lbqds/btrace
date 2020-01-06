@@ -1,14 +1,15 @@
 package org.openjdk.btrace.instr;
 
 import org.openjdk.btrace.core.ArgsMap;
+import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.SharedSettings;
 import org.openjdk.btrace.core.comm.Command;
 import org.openjdk.btrace.core.comm.CommandListener;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openjdk.btrace.runtime.BTraceRuntimes;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +31,7 @@ public class ProbeLoaderUpgradeTest {
 
     @Test
     public void testPersistedProbeLoad() throws Exception {
-        BTraceRuntimeImpl rt = new BTraceRuntimeImpl("PackVersion1", new ArgsMap(), new CommandListener() {
+        BTraceRuntime.Impl rt = BTraceRuntimes.getRuntime("PackVersion1", new ArgsMap(), new CommandListener() {
             @Override
             public void onCommand(Command cmd) throws IOException {
 

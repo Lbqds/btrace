@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -48,29 +49,35 @@ final class BTraceClassReader extends ClassReader {
     private static final Method getAttributesMthd;
     private static final Method readAnnotationValuesMthd;
     private static final Field itemsFld;
+    private static final Field mslFld;
 
     static {
         Method m1 = null, m2 = null;
-        Field f = null;
+        Field f1 = null, f2 = null;
+
         try {
-            m1 = ClassReader.class.getDeclaredMethod("a");
+            m1 = ClassReader.class.getDeclaredMethod("getFirstAttributeOffset");
             m1.setAccessible(true);
 
             m2 = ClassReader.class.getDeclaredMethod(
-                    "a",
-                    int.class, char[].class,
-                    boolean.class, AnnotationVisitor.class
+                    "readElementValue",
+                    AnnotationVisitor.class,
+                    int.class, String.class, char[].class
             );
             m2.setAccessible(true);
 
-            f = ClassReader.class.getDeclaredField("a");
-            f.setAccessible(true);
+            f1 = ClassReader.class.getDeclaredField("cpInfoOffsets");
+            f1.setAccessible(true);
+
+            f2 = ClassReader.class.getDeclaredField("maxStringLength");
+            f2.setAccessible(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
         getAttributesMthd = m1;
         readAnnotationValuesMthd = m2;
-        itemsFld = f;
+        itemsFld = f1;
+        mslFld = f2;
     }
 
     private final ClassLoader cl;
@@ -103,21 +110,10 @@ final class BTraceClassReader extends ClassReader {
     }
 
     public String[] readClassSupers() {
-        int u = header; // current offset in the class file
-        char[] c = new char[getMaxStringLength()]; // buffer used to read strings
-
-        // reads the class declaration
-        int ifcsLen = readUnsignedShort(u + 6);
-        String[] info = new String[ifcsLen + 1];
-        // supertype name
-        info[0] = readClass(u + 4, c);
-        u += 8;
-        // interfaces, if any
-        for (int i = 0; i < ifcsLen; ++i) {
-            info[1 + i] = readClass(u, c);
-            u += 2;
-        }
-        return info;
+        String[] ifaces = getInterfaces();
+        String[] supers = Arrays.copyOf(ifaces, ifaces.length + 1);
+        supers[supers.length - 1] = getSuperName();
+        return supers;
     }
 
     public boolean isInterface() {
@@ -189,14 +185,14 @@ final class BTraceClassReader extends ClassReader {
         if (u == -1) {
             return -1;
         }
-
-        for (int i = readUnsignedShort(u); i > 0; --i) {
-            String attrName = readUTF8(u + 2, buf);
-
+        for (int i = readUnsignedShort(u - 2); i > 0; --i) {
+            String attrName = readUTF8(u, buf);
+            int attributeLength = readInt(u + 2);
+            u += 6;
             if ("RuntimeVisibleAnnotations".equals(attrName)) {
-                return u + 8;
+                return u;
             }
-            u += 6 + readInt(u + 4);
+            u += attributeLength;
         }
         return -1;
     }
@@ -204,7 +200,7 @@ final class BTraceClassReader extends ClassReader {
     private int skipAnnotationValues(int off, char[] buf) {
         try {
             if (readAnnotationValuesMthd != null) {
-                return (int) readAnnotationValuesMthd.invoke(this, off, buf, true, null);
+                return (int) readAnnotationValuesMthd.invoke(this, null, off, null, buf);
             }
         } catch (Exception e) {
             e.printStackTrace();

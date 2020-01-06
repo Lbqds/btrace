@@ -26,10 +26,10 @@
 package org.openjdk.btrace.instr;
 
 import org.openjdk.btrace.core.ArgsMap;
+import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.DebugSupport;
 import org.openjdk.btrace.core.VerifierException;
 import org.openjdk.btrace.core.comm.RetransformClassNotification;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -67,7 +67,7 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
     private final Map<String, BTraceMethodNode> idmap;
     private final Preprocessor prep;
 
-    private volatile BTraceRuntimeImpl rt = null;
+    private volatile BTraceRuntime.Impl rt = null;
 
     private BTraceTransformer transformer;
     private VerifierException verifierException = null;
@@ -106,7 +106,7 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] exceptions) {
         super.visitMethod(access, name, desc, sig, exceptions);
-        MethodNode mn = (MethodNode) methods.remove(methods.size() - 1);
+        MethodNode mn = methods.remove(methods.size() - 1);
         BTraceMethodNode bmn = new BTraceMethodNode(mn, this);
         methods.add(bmn);
         idmap.put(CallGraph.methodId(name, desc), bmn);
@@ -160,12 +160,12 @@ public final class BTraceProbeNode extends ClassNode implements BTraceProbe {
     }
 
     @Override
-    public Class register(BTraceRuntimeImpl rt, BTraceTransformer t) {
+    public Class<?> register(BTraceRuntime.Impl rt, BTraceTransformer t) {
         byte[] code = getBytecode(true);
         if (debug.isDumpClasses()) {
             debug.dumpClass(name + "_bcp", code);
         }
-        Class clz = delegate.defineClass(rt, code);
+        Class<?> clz = delegate.defineClass(rt, code);
         t.register(this);
         transformer = t;
         this.rt = rt;

@@ -19,7 +19,7 @@ shadowJar {
 
     exclude 'org/jctools/maps/**'
     exclude 'org/jctools/util/**'
-    exclude 'META-INF/**'
+    exclude 'META-INF/services/**'
 
     exclude 'org/objectweb/asm/commons/**'
     exclude 'org/objectweb/asm/util/**'

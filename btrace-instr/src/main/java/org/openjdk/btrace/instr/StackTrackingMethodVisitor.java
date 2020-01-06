@@ -259,11 +259,11 @@ class StackTrackingMethodVisitor extends MethodVisitor {
         super.visitTypeInsn(opcode, type);
         switch (opcode) {
             case Opcodes.NEW: {
-                state.push(new InstanceItem(Type.getType(type)));
+                state.push(new InstanceItem(Type.getObjectType(type)));
                 break;
             }
             case Opcodes.ANEWARRAY: {
-                state.push(new InstanceItem(Type.getType(type), state.pop()));
+                state.push(new InstanceItem(Type.getObjectType(type), state.pop()));
                 break;
             }
             case Opcodes.INSTANCEOF: {

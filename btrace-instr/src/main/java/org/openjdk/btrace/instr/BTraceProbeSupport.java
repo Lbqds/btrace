@@ -24,8 +24,7 @@ package org.openjdk.btrace.instr;
 import org.openjdk.btrace.core.ArgsMap;
 import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.DebugSupport;
-import org.openjdk.btrace.runtime.BTraceRuntimeBase;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
+import org.openjdk.btrace.runtime.BTraceRuntimeAccess;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,7 +58,7 @@ public final class BTraceProbeSupport {
 
     void setClassName(String name) {
         origName = name;
-        String clientName = BTraceRuntimeBase.getClientName(name);
+        String clientName = BTraceRuntimeAccess.getClientName(name);
         className = clientName != null ? clientName : name;
         classRenamed = !className.equals(name);
     }
@@ -207,7 +206,7 @@ public final class BTraceProbeSupport {
         return trustedScript;
     }
 
-    Class defineClass(BTraceRuntimeImpl rt, byte[] code) {
+    Class<?> defineClass(BTraceRuntime.Impl rt, byte[] code) {
         // This extra BTraceRuntime.enter is needed to
         // check whether we have already entered before.
         boolean enteredHere = BTraceRuntime.enter();
@@ -219,7 +218,7 @@ public final class BTraceProbeSupport {
             if (debug.isDebug()) {
                 debug.debug("about to defineClass " + getClassName(true));
             }
-            Class clz = rt.defineClass(code, isTransforming());
+            Class<?> clz = rt.defineClass(code, isTransforming());
             if (debug.isDebug()) {
                 debug.debug("defineClass succeeded for " + getClassName(false));
             }

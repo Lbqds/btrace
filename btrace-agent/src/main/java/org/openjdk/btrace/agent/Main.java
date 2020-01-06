@@ -32,13 +32,16 @@ import org.openjdk.btrace.core.SharedSettings;
 import org.openjdk.btrace.core.comm.ErrorCommand;
 import org.openjdk.btrace.instr.BTraceTransformer;
 import org.openjdk.btrace.instr.Constants;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
+import org.openjdk.btrace.runtime.BTraceRuntimeAccess;
+import org.openjdk.btrace.runtime.BTraceRuntimes;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
@@ -57,6 +60,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
+import java.util.zip.ZipFile;
 
 /**
  * This is the main class for BTrace java.lang.instrument agent.
@@ -132,7 +136,7 @@ public final class Main {
                 }
             });
             // force back-registration of BTraceRuntimeImpl in BTraceRuntime
-            BTraceRuntimeImpl.registerBTraceRuntime();
+            BTraceRuntimes.getDefault();
             // init BTraceRuntime
             BTraceRuntime.initUnsafe();
             BTraceRuntime.enter();
@@ -461,33 +465,46 @@ public final class Main {
     }
 
     private static void processClasspaths(String libs) {
+        URL agentJar = Main.class.getResource("Main.class");
+        String bootPath = agentJar.toString().replace("jar:file:", "");
+        int idx = bootPath.indexOf("btrace-agent.jar");
+        if (idx > -1) {
+            bootPath = bootPath.substring(0, idx) + "btrace-boot.jar";
+        }
         String bootClassPath = argMap.get("bootClassPath");
-        if (bootClassPath != null) {
-            if (isDebug()) {
-                debugPrint("Bootstrap ClassPath: " + bootClassPath);
+        if (bootClassPath == null) {
+            bootClassPath = bootPath;
+        } else {
+            if (".".equals(bootClassPath)) {
+                bootClassPath = bootPath;
+            } else {
+                bootClassPath = bootPath + File.pathSeparator + bootClassPath;
             }
-            StringTokenizer tokenizer = new StringTokenizer(bootClassPath, File.pathSeparator);
-            try {
-                while (tokenizer.hasMoreTokens()) {
-                    String path = tokenizer.nextToken();
-                    File f = new File(path);
-                    if (!f.exists()) {
-                        DebugSupport.warning("BTrace bootstrap classpath resource [ " + path + "] does not exist");
+        }
+        if (isDebug()) {
+            debugPrint("Bootstrap ClassPath: " + bootClassPath);
+        }
+        StringTokenizer tokenizer = new StringTokenizer(bootClassPath, File.pathSeparator);
+        try {
+            while (tokenizer.hasMoreTokens()) {
+                String path = tokenizer.nextToken();
+                File f = new File(path);
+                if (!f.exists()) {
+                    DebugSupport.warning("BTrace bootstrap classpath resource [ " + path + "] does not exist");
+                } else {
+                    if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
+                        JarFile jf = asJarFile(f);
+                        inst.appendToBootstrapClassLoaderSearch(jf);
                     } else {
-                        if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
-                            JarFile jf = new JarFile(f);
-                            inst.appendToBootstrapClassLoaderSearch(jf);
-                        } else {
-                            debugPrint("ignoring boot classpath element '" + path
-                                    + "' - only jar files allowed");
-                        }
+                        debugPrint("ignoring boot classpath element '" + path
+                                + "' - only jar files allowed");
                     }
                 }
-            } catch (IOException ex) {
-                debugPrint("adding to boot classpath failed!");
-                debugPrint(ex);
-                return;
             }
+        } catch (IOException ex) {
+            debugPrint("adding to boot classpath failed!");
+            debugPrint(ex);
+            return;
         }
 
         String systemClassPath = argMap.get("systemClassPath");
@@ -495,7 +512,7 @@ public final class Main {
             if (isDebug()) {
                 debugPrint("System ClassPath: " + systemClassPath);
             }
-            StringTokenizer tokenizer = new StringTokenizer(systemClassPath, File.pathSeparator);
+            tokenizer = new StringTokenizer(systemClassPath, File.pathSeparator);
             try {
                 while (tokenizer.hasMoreTokens()) {
                     String path = tokenizer.nextToken();
@@ -504,7 +521,7 @@ public final class Main {
                         DebugSupport.warning("BTrace system classpath resource [" + path + "] does not exist.");
                     } else {
                         if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
-                            JarFile jf = new JarFile(f);
+                            JarFile jf = asJarFile(f);
                             inst.appendToSystemClassLoaderSearch(jf);
                         } else {
                             debugPrint("ignoring system classpath element '" + path
@@ -520,6 +537,18 @@ public final class Main {
         }
 
         addPreconfLibs(libs);
+    }
+
+    private static JarFile asJarFile(File path) throws IOException {
+        try {
+            Class.forName("java.lang.Module"); // bail out early if on pre Java 9 version
+            Class<Runtime> rtClass = Runtime.class;
+            Method m = rtClass.getMethod("version");
+            Object version = m.invoke(null);
+            JarFile jf = JarFile.class.getConstructor(File.class, boolean.class, int.class, version.getClass()).newInstance(path, true, ZipFile.OPEN_READ, version);
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException ignore) {}
+
+        return new JarFile(path);
     }
 
     private static void addPreconfLibs(String libs) {

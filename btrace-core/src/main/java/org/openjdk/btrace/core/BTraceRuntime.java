@@ -30,6 +30,7 @@ import org.openjdk.btrace.core.aggregation.Aggregation;
 import org.openjdk.btrace.core.aggregation.AggregationFunction;
 import org.openjdk.btrace.core.aggregation.AggregationKey;
 import org.openjdk.btrace.core.comm.Command;
+import org.openjdk.btrace.core.comm.EventCommand;
 import org.openjdk.btrace.core.comm.GridDataCommand;
 import org.openjdk.btrace.core.comm.NumberDataCommand;
 import org.openjdk.btrace.core.comm.NumberMapDataCommand;
@@ -90,7 +91,7 @@ public final class BTraceRuntime {
     private static Properties dotWriterProps;
     private static volatile BTraceRuntimeAccessor rtAccessor = new BTraceRuntimeAccessor() {
         @Override
-        public IBTraceRuntime getRt() {
+        public Impl getRt() {
             return null;
         }
     };
@@ -103,8 +104,8 @@ public final class BTraceRuntime {
     private BTraceRuntime() {
     }
 
-    private static IBTraceRuntime getRt() {
-        IBTraceRuntime rt = rtAccessor.getRt();
+    private static Impl getRt() {
+        Impl rt = rtAccessor.getRt();
         return rt;
     }
 
@@ -1218,8 +1219,11 @@ public final class BTraceRuntime {
     // raise DTrace USDT probe
     private static native int dtraceProbe0(String s1, String s2, int i1, int i2);
 
-    public interface IBTraceRuntime {
+    public interface Impl {
+        boolean isDisabled();
+
         void debugPrint(Throwable t);
+        void debugPrint(String msg);
 
         void send(String msg);
 
@@ -1273,6 +1277,13 @@ public final class BTraceRuntime {
 
         boolean isDTraceEnabled();
 
+        void handleEvent(EventCommand cmd);
+        void handleExit(int i);
+        void shutdownCmdLine();
+
+        int getLevel();
+        void setLevel(int level);
+
         List<MemoryPoolMXBean> getMemoryPoolMXBeans();
         HotSpotDiagnosticMXBean getHotspotMBean();
         MemoryMXBean getMemoryMXBean();
@@ -1280,10 +1291,12 @@ public final class BTraceRuntime {
         ThreadMXBean getThreadMXBean();
         OperatingSystemMXBean getOperatingSystemMXBean();
         List<GarbageCollectorMXBean> getGCMBeans();
+
+        Class<?> defineClass(byte[] code, boolean mustBeBootstrap);
     }
 
     public interface BTraceRuntimeAccessor {
-        IBTraceRuntime getRt();
+        Impl getRt();
     }
 
     private static final class BTraceAtomicInteger extends AtomicInteger {

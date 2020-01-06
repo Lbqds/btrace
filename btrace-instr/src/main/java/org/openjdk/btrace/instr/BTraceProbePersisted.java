@@ -22,19 +22,18 @@
 package org.openjdk.btrace.instr;
 
 import org.openjdk.btrace.core.ArgsMap;
+import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.DebugSupport;
 import org.openjdk.btrace.core.VerifierException;
 import org.openjdk.btrace.core.annotations.Kind;
 import org.openjdk.btrace.core.annotations.Sampled;
 import org.openjdk.btrace.core.annotations.Where;
 import org.openjdk.btrace.core.comm.RetransformClassNotification;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.io.DataInputStream;
@@ -60,7 +59,7 @@ public class BTraceProbePersisted implements BTraceProbe {
     private final DebugSupport debug;
     private final AtomicBoolean triedVerify = new AtomicBoolean(false);
     private final Map<String, Set<String>> calleeMap = new HashMap<>();
-    private volatile BTraceRuntimeImpl rt = null;
+    private volatile BTraceRuntime.Impl rt = null;
     private BTraceTransformer transformer;
     private byte[] fullData = null;
     private byte[] dataHolder = null;
@@ -480,12 +479,12 @@ public class BTraceProbePersisted implements BTraceProbe {
     }
 
     @Override
-    public Class register(BTraceRuntimeImpl rt, BTraceTransformer t) {
+    public Class<?> register(BTraceRuntime.Impl rt, BTraceTransformer t) {
         byte[] code = dataHolder;
         if (debug.isDumpClasses()) {
             debug.dumpClass(delegate.getClassName(true) + "_bcp", code);
         }
-        Class clz = delegate.defineClass(rt, code);
+        Class<?> clz = delegate.defineClass(rt, code);
         t.register(this);
         transformer = t;
         this.rt = rt;
@@ -688,7 +687,7 @@ public class BTraceProbePersisted implements BTraceProbe {
                                     // allow string concatenation via StringBuilder
                                 } else if (owner.equals(Constants.THREAD_LOCAL_INTERNAL)) {
                                     // allow ThreadLocal methods
-                                } else if (owner.equals(Constants.BTRACERTIMPL_INTERNAL)) {
+                                } else if (owner.equals(Constants.BTRACERTACCESSL_INTERNAL)) {
                                     // allow BTraceRuntimeImpl methods
                                 } else {
                                     if (!delegate.isServiceType(owner)) {
@@ -740,7 +739,7 @@ public class BTraceProbePersisted implements BTraceProbe {
                         }
                         if (opcode == NEW) {
                             // allow StringBuilder creation for string concatenation
-                            if (!desc.equals(Constants.STRING_BUILDER_INTERNAL) && !delegate.isServiceType(Type.getType(desc).getInternalName())) {
+                            if (!desc.equals(Constants.STRING_BUILDER_INTERNAL) && !delegate.isServiceType(desc)) {
                                 Verifier.reportError("no.new.object", desc);
                             }
                         }

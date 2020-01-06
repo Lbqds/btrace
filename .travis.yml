@@ -9,7 +9,7 @@ cache:
   - "$HOME/.gradle"
 language: java
 jdk:
-- oraclejdk8
+- openjdk11
 
 notifications:
   webhooks:

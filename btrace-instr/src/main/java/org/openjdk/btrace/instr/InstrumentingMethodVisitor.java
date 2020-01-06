@@ -95,7 +95,7 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
                 return DOUBLE;
             }
             default: {
-                return t == Constants.NULL_TYPE ? NULL : t == Constants.TOP_TYPE ? TOP : t.getInternalName();
+                return t == Constants.NULL_TYPE ? NULL : (t == Constants.TOP_TYPE ? TOP : t.getInternalName());
             }
         }
     }
@@ -1029,7 +1029,8 @@ public final class InstrumentingMethodVisitor extends MethodVisitor implements M
 
     @Override
     public final int newVar(Type t) {
-        int idx = variableMapper.newVarIdx(t.getSize());
+        int size = t == Constants.NULL_TYPE ? 1 : t.getSize();
+        int idx = variableMapper.newVarIdx(size);
 
         int var = VariableMapper.unmask(idx == Integer.MIN_VALUE ? 0 : idx);
         newLocals.add(new LocalVarSlot(var, toSlotType(t)));

@@ -55,7 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressWarnings("ConstantConditions")
 abstract public class RuntimeTest {
     private static String cp = null;
-    private static String java = null;
+    protected static String java = null;
     private static String btraceExtPath = null;
     private static File projectRoot = null;
     /**
@@ -100,22 +100,24 @@ abstract public class RuntimeTest {
             throw new Error(e);
         }
         String toolsjar = null;
+
         cp = System.getProperty("java.class.path");
-        StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
-        while (st.hasMoreTokens()) {
-            String elem = st.nextToken();
-            if (elem.contains("tools.jar")) {
-                toolsjar = elem;
-            }
+
+        String javaHome = System.getenv("TEST_JAVA_HOME");
+        if (javaHome == null) {
+            javaHome = System.getProperty("java.home").replace("/jre", "");
         }
-        if (toolsjar == null) {
-            URL rturl = String.class.getResource("/java/lang/String.class");
-            toolsjar = rturl.toString().replace("jar:file:", "").replace("jre/lib/rt.jar", "lib/tools.jar");
-            toolsjar = toolsjar.substring(0, toolsjar.indexOf('!'));
-            System.err.println(toolsjar);
+        java = javaHome;
+        Path toolsJarPath = Paths.get(java, "lib", "tools.jar");
+        if (Files.exists(toolsJarPath)) {
+            toolsjar = toolsJarPath.toString();
         }
         btraceExtPath = btraceExtPath + File.pathSeparator + toolsjar;
-        java = System.getProperty("java.home").replace("/jre", "");
+//        Path toolsJarPath = Paths.get(java, "lib", "tools.jar");
+//        if (Files.exists(toolsJarPath)) {
+//            cp += File.pathSeparator + toolsJarPath.toString();
+//        }
+        System.out.println("=== Using Java: " + java + ", toolsJar: " + toolsjar);
     }
 
     protected void reset() {

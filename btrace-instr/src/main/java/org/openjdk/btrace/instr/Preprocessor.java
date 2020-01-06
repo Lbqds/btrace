@@ -28,7 +28,6 @@ package org.openjdk.btrace.instr;
 import org.openjdk.btrace.core.BTraceRuntime;
 import org.openjdk.btrace.core.DebugSupport;
 import org.openjdk.btrace.core.annotations.Return;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -48,6 +47,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.openjdk.btrace.runtime.BTraceRuntimeImplBase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +81,7 @@ import java.util.Set;
  * initialize the same in <clinit> method
  * 6. add prolog and epilogue in each BTrace action method
  * to insert BTraceRuntime.enter/leave and also to call
- * BTraceRuntime.handleException on exception catch
+ * BTraceRuntimeImplBase.handleException on exception catch
  * 7. initialize and reference any service instances
  * 8. add a field to store client's BTraceRuntime instance
  * 9. make all fields publicly accessible
@@ -108,7 +108,7 @@ final class Preprocessor {
     private static final String NEW_PERFCOUNTER_DESC = "(" + Constants.OBJECT_DESC + Constants.STRING_DESC + Constants.STRING_DESC + ")" + Constants.VOID_DESC;
     private static final String BTRACERT_FOR_CLASS_DESC = "(" + Constants.CLASS_DESC + "[" + TIMERHANDLER_DESC + "[" + EVENTHANDLER_DESC +
             "[" + ERRORHANDLER_DESC + "[" + EXITHANDLER_DESC + "[" + LOWMEMORYHANDLER_DESC +
-            ")" + Constants.BTRACERTIMPL_DESC;
+            ")" + Constants.BTRACERTBASE_DESC;
     private static final String BTRACERT_ENTER_DESC = "(" + Constants.BTRACERTIMPL_DESC + ")" + Constants.BOOLEAN_DESC;
     private static final String BTRACERT_HANDLE_EXCEPTION_DESC = "(" + Constants.THROWABLE_DESC + ")" + Constants.VOID_DESC;
     private static final String RT_CTX_INTERNAL = "org/openjdk/btrace/services/api/RuntimeContext";
@@ -232,7 +232,7 @@ final class Preprocessor {
         addBTraceErrorHandler(cn, mn);
         addBTraceRuntimeEnter(cn, mn);
 
-        recalculateVars(mn, lvg);
+        recalculateVars(mn);
     }
 
     private void makePublic(MethodNode mn) {
@@ -303,7 +303,7 @@ final class Preprocessor {
         initList.add(
                 new MethodInsnNode(
                         Opcodes.INVOKESTATIC,
-                        Constants.BTRACERTIMPL_INTERNAL,
+                        Constants.BTRACERTACCESSL_INTERNAL,
                         "newThreadLocal",
                         NEW_TLS_DESC,
                         false
@@ -321,11 +321,13 @@ final class Preprocessor {
     private InsnList exportInitSequence(ClassNode cn, String name, String desc) {
         InsnList init = new InsnList();
 
+        init.add(getRuntimeImpl(cn));
+        init.add(new InsnNode(Opcodes.SWAP));
         init.add(new LdcInsnNode(perfCounterName(cn, name)));
         init.add(new LdcInsnNode(desc));
         init.add(new MethodInsnNode(
-                        Opcodes.INVOKESTATIC,
-                        Constants.BTRACERTIMPL_INTERNAL,
+                        Opcodes.INVOKEVIRTUAL,
+                        Constants.BTRACERTBASE_INTERNAL,
                         "newPerfCounter",
                         NEW_PERFCOUNTER_DESC,
                         false
@@ -401,6 +403,7 @@ final class Preprocessor {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void checkAugmentedReturn(MethodNode mn) {
         if (isUnannotated(mn)) return;
 
@@ -472,7 +475,7 @@ final class Preprocessor {
         }
     }
 
-    private void recalculateVars(final MethodNode mn, LocalVarGenerator lvg) {
+    private void recalculateVars(final MethodNode mn) {
         for (AbstractInsnNode n = mn.instructions.getFirst(); n != null; n = n.getNext()) {
             if (n.getType() == AbstractInsnNode.VAR_INSN) {
                 VarInsnNode vin = (VarInsnNode) n;
@@ -519,7 +522,7 @@ final class Preprocessor {
         l.add(loadLowMemoryHandlers(cn));
         l.add(new MethodInsnNode(
                 Opcodes.INVOKESTATIC,
-                Constants.BTRACERTIMPL_INTERNAL,
+                Constants.BTRACERTACCESSL_INTERNAL,
                 "forClass",
                 BTRACERT_FOR_CLASS_DESC,
                 false)
@@ -541,7 +544,7 @@ final class Preprocessor {
             if (mn.visibleAnnotations != null) {
                 AnnotationNode an = (AnnotationNode) mn.visibleAnnotations.get(0);
                 if (an.desc.equals(Constants.ONTIMER_DESC)) {
-                    Iterator anValueIterator = an.values != null ? an.values.iterator() : null;
+                    Iterator<?> anValueIterator = an.values != null ? an.values.iterator() : null;
                     if (anValueIterator != null) {
                         long period = -1;
                         String property = null;
@@ -774,7 +777,7 @@ final class Preprocessor {
                 InsnList il = new InsnList();
                 il.add(getRuntimeImpl(cNode));
                 il.add(new MethodInsnNode(
-                        Opcodes.INVOKEVIRTUAL, Constants.BTRACERTIMPL_INTERNAL,
+                        Opcodes.INVOKEVIRTUAL, Constants.BTRACERTBASE_INTERNAL,
                         "start", "()V", false
                 ));
                 clinit1.instructions.insertBefore(n, il);
@@ -790,7 +793,7 @@ final class Preprocessor {
         InsnList il = new InsnList();
         il.add(getRuntimeImpl(cn));
         il.add(new MethodInsnNode(
-                Opcodes.INVOKEVIRTUAL, Constants.BTRACERTIMPL_INTERNAL,
+                Opcodes.INVOKEVIRTUAL, Constants.BTRACERTBASE_INTERNAL,
                 "leave", "()V", false
         ));
         return il;
@@ -799,7 +802,7 @@ final class Preprocessor {
     private void addRuntimeNode(ClassNode cn) {
         rtField = new FieldNode(
                 Opcodes.ASM5, (Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC),
-                "runtime", Type.getDescriptor(BTraceRuntimeImpl.class),
+                "runtime", Type.getDescriptor(BTraceRuntimeImplBase.class),
                 null, null
         );
         cn.fields.add(0, rtField);
@@ -820,7 +823,7 @@ final class Preprocessor {
             l.add(new InsnNode(Opcodes.DUP_X1));
             l.add(new InsnNode(Opcodes.SWAP));
             l.add(new MethodInsnNode(
-                    Opcodes.INVOKEVIRTUAL, Constants.BTRACERTIMPL_INTERNAL,
+                    Opcodes.INVOKEVIRTUAL, Constants.BTRACERTBASE_INTERNAL,
                     "handleException", BTRACERT_HANDLE_EXCEPTION_DESC,
                     false
             ));
@@ -847,7 +850,7 @@ final class Preprocessor {
     private void addRuntimeCheck(ClassNode cn, MethodNode mn, InsnList entryCheck, boolean b) {
         LabelNode start = new LabelNode();
         entryCheck.add(new MethodInsnNode(
-                Opcodes.INVOKESTATIC, Constants.BTRACERTIMPL_INTERNAL,
+                Opcodes.INVOKESTATIC, Constants.BTRACERTACCESSL_INTERNAL,
                 "enter", BTRACERT_ENTER_DESC,
                 false
         ));
@@ -910,7 +913,7 @@ final class Preprocessor {
             if (n.getType() == AbstractInsnNode.METHOD_INSN) {
                 MethodInsnNode min = (MethodInsnNode) n;
                 if (min.getOpcode() == Opcodes.INVOKEVIRTUAL &&
-                        min.owner.equals(Constants.BTRACERTIMPL_INTERNAL) &&
+                        min.owner.equals(Constants.BTRACERTBASE_INTERNAL) &&
                         min.name.equals("start")) {
                     return min;
                 }
@@ -1035,9 +1038,19 @@ final class Preprocessor {
                     new InsnNode(Opcodes.ACONST_NULL));
         } else {
             InsnList toInsert = new InsnList();
+            toInsert.add(getRuntimeImpl(cn));
+            if (isPut) {
+                // if the 'value' is on stack swap it with the rt instance to have the stack in required order
+                if (tType.getSize() == 1) {
+                    toInsert.add(new InsnNode(Opcodes.SWAP));
+                } else {
+                    toInsert.add(new InsnNode(Opcodes.DUP_X2));
+                    toInsert.add(new InsnNode(Opcodes.POP));
+                }
+            }
             toInsert.add(new LdcInsnNode(perfCounterName(cn, fin.name)));
             toInsert.add(new MethodInsnNode(
-                    Opcodes.INVOKESTATIC, Constants.BTRACERTIMPL_INTERNAL,
+                    Opcodes.INVOKEVIRTUAL, Constants.BTRACERTBASE_INTERNAL,
                     methodName, isPut ? Type.getMethodDescriptor(Type.VOID_TYPE, tType, Constants.STRING_TYPE) :
                     Type.getMethodDescriptor(tType, Constants.STRING_TYPE),
                     false
@@ -1302,6 +1315,18 @@ final class Preprocessor {
         );
     }
 
+    /**
+     * Add the instruction sequence to print the message using {@linkplain DebugSupport}
+     * @param msg message
+     * @return the instruction list
+     */
+    private InsnList debugPrint(String msg) {
+        InsnList list = new InsnList();
+        list.add(msg != null ? new LdcInsnNode(msg) : new InsnNode(Opcodes.ACONST_NULL));
+        list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/openjdk/btrace/core/DebugSupport", "info", "(Ljava/lang/String;)V"));
+        return list;
+    }
+
     private MethodInsnNode unboxNode(String boxedDesc, String boxedInternal, String unboxedDesc) {
         String mName = null;
         switch (boxedDesc) {
@@ -1362,10 +1387,6 @@ final class Preprocessor {
             }
         }
         return Integer.MIN_VALUE;
-    }
-
-    private FieldInsnNode getRuntime() {
-        return new FieldInsnNode(Opcodes.GETSTATIC, Constants.BTRACERT_INTERNAL, "INSTANCE", Constants.BTRACERT_DESC);
     }
 
     private enum MethodClassifier {

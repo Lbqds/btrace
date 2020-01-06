@@ -45,7 +45,7 @@
 package org.openjdk.btrace.instr;
 
 import org.openjdk.btrace.core.ArgsMap;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
+import org.openjdk.btrace.core.BTraceRuntime;
 import org.objectweb.asm.ClassVisitor;
 
 import java.util.Collection;
@@ -73,7 +73,7 @@ public interface BTraceProbe {
 
     Iterable<OnProbe> onprobes();
 
-    Class register(BTraceRuntimeImpl rt, BTraceTransformer t);
+    Class<?> register(BTraceRuntime.Impl rt, BTraceTransformer t);
 
     void unregister();
 

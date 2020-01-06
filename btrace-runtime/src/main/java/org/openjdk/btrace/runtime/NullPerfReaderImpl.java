@@ -23,9 +23,7 @@
  * questions.
  */
 
-package org.openjdk.btrace.agent;
-
-import org.openjdk.btrace.runtime.PerfReader;
+package org.openjdk.btrace.runtime;
 
 /**
  * Dummy perf reader that throws UnsupportedOperationException always.

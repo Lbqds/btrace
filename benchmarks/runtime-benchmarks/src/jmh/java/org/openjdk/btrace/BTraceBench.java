@@ -47,7 +47,7 @@ import org.openjdk.btrace.core.comm.CommandListener;
 import org.openjdk.btrace.core.comm.DataCommand;
 import org.openjdk.btrace.core.comm.OkayCommand;
 import org.openjdk.btrace.instr.MethodTracker;
-import org.openjdk.btrace.runtime.BTraceRuntimeImpl;
+import org.openjdk.btrace.runtime.BTraceRuntimes;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -114,14 +114,13 @@ public class BTraceBench {
     long sampleCounter;
     long durCounter;
 
-    BTraceRuntime.IBTraceRuntime br;
+    BTraceRuntime.Impl br;
     LinkedBlockingQueue<String> l = new LinkedBlockingQueue<>();
     PrintWriter pw;
     CommandListener cl;
 
     @Setup
     public void setup() {
-        BTraceRuntimeImpl.registerBTraceRuntime();
         MethodTracker.registerCounter(1, 10);
         MethodTracker.registerCounter(2, 50);
         MethodTracker.registerCounter(3, 100);
@@ -142,7 +141,7 @@ public class BTraceBench {
             cl = (c) -> {
             };
         }
-        br = new BTraceRuntimeImpl("BenchmarkClass", new ArgsMap(), cl, null, null);
+        br = BTraceRuntimes.getRuntime("BenchmarkClass", new ArgsMap(), cl, null, null);
     }
 
     @Warmup(iterations = 5, time = 500, timeUnit = TimeUnit.MILLISECONDS)

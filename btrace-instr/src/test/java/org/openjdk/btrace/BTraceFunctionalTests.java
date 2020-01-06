@@ -30,6 +30,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 /**
  * A set of end-to-end functional tests.
  * <p>
@@ -70,20 +73,24 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testOnProbe() throws Exception {
-        test(
-            "resources.Main",
-            "btrace/OnProbeTest.java",
-            5,
-            new ResultValidator() {
-                @Override
-                public void validate(String stdout, String stderr, int retcode) {
-                    Assert.assertFalse("Script should not have failed", stdout.contains("FAILED"));
-                    Assert.assertTrue("Non-empty stderr", stderr.isEmpty());
-                    Assert.assertTrue(stdout.contains("[this, noargs]"));
-                    Assert.assertTrue(stdout.contains("[this, args]"));
-                }
-            }
-        );
+        if (Files.exists(Paths.get(java, "jre"))) {
+            test(
+                    "resources.Main",
+                    "btrace/OnProbeTest.java",
+                    5,
+                    new ResultValidator() {
+                        @Override
+                        public void validate(String stdout, String stderr, int retcode) {
+                            Assert.assertFalse("Script should not have failed", stdout.contains("FAILED"));
+                            Assert.assertTrue("Non-empty stderr", stderr.isEmpty());
+                            Assert.assertTrue(stdout.contains("[this, noargs]"));
+                            Assert.assertTrue(stdout.contains("[this, args]"));
+                        }
+                    }
+            );
+        } else {
+            System.err.println("XML libraries not available. Skipping @OnProbe tests");
+        }
     }
 
     @Test
@@ -220,6 +227,8 @@ public class BTraceFunctionalTests extends RuntimeTest {
 
     @Test
     public void testOnMethodSubclass() throws Exception {
+        debugTestApp = true;
+        debugBTrace = true;
         test(
             "resources.Main",
             "btrace/OnMethodSubclassTest.java",

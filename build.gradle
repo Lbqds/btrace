@@ -2,7 +2,7 @@ plugins {
     id "com.jfrog.bintray" version "1.7"
 }
 
-project.ext.asmVersion = 5.2
+project.ext.asmVersion = 7.2
 
 def env = System.getenv()
 
@@ -59,7 +59,8 @@ project(':btrace-statsd') {
 
 project(':btrace-instr') {
     dependencies {
-        compile(group: 'org.ow2.asm', name: 'asm-all', version: "${rootProject.asmVersion}")
+        compile(group: 'org.ow2.asm', name: 'asm', version: "${rootProject.asmVersion}")
+        compile(group: 'org.ow2.asm', name: 'asm-tree', version: "${rootProject.asmVersion}")
         compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc4'
         compile project(':btrace-core')
         compile project(':btrace-runtime')

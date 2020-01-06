@@ -51,7 +51,9 @@ task agentJar(type: ShadowJar) {
 
     exclude 'org/jctools/**'
     exclude 'org/objectweb/asm/**'
-    exclude 'META-INF/**'
+    exclude 'META-INF/services/**'
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/versions/**'
 
     exclude 'org/openjdk/btrace/compiler/**'
     exclude 'org/openjdk/btrace/core/**'
@@ -80,7 +82,8 @@ task bootJar(type: ShadowJar) {
     exclude 'org/codehaus/**'
 
     exclude 'org/jctools/maps/**'
-    exclude 'META-INF/**'
+    exclude 'META-INF/services/**'
+    exclude 'META-INF/maven/**'
 
     exclude 'org/objectweb/asm/commons/**'
     exclude 'org/objectweb/asm/util/**'
@@ -92,6 +95,10 @@ task bootJar(type: ShadowJar) {
     configurations = [project.configurations.compile]
     relocate 'org.jctools', 'org.openjdk.btrace.libs.org.jctools'
     relocate 'org.objectweb.asm', 'org.openjdk.btrace.libs.org.objectweb.asm'
+
+    manifest {
+        attributes('Multi-Release' : 'true')
+    }
 }
 
 task clientJar(type: ShadowJar) {
